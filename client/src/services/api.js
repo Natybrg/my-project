@@ -74,5 +74,15 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+export const getAllUsers = async () => {
+  try {
+    const response = await api.get('/users');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw { message: 'אירעה שגיאה בטעינת המשתמשים' };
+  }
+};
+
 
 export default api;
