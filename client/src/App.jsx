@@ -6,6 +6,7 @@ import PaymentPage from './pages/PaymentPage';
 import HomePage from './pages/HomePage';
 import DataforShabat from './pages/DataforShabat';
 import UserManagementPage from './RolsPages/gabai/Management';
+import AdminPage from './pages/AdminPage';  // הוספת import חדש
 
 const theme = createTheme({
   direction: 'rtl',
@@ -26,6 +27,8 @@ function App() {
           <Route path="/about" element={<DataforShabat />} />
           <Route path="/contact" element={<UserManagementPage/>} />
           <Route path="/profile" element={<div>פרופיל</div>} />
+          <Route path="/admin" element={<AdminPage />} />  {/* דף ניהול ראשי */}
+          {/* בעתיד תוכל להוסיף כאן נתיבים נוספים לדפי ניהול ספציפיים */}
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

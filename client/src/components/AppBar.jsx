@@ -10,7 +10,7 @@ import {
   Menu,
   MenuItem
 } from '@mui/material';
-import { AccountCircle, Home, Payment } from '@mui/icons-material';
+import { AccountCircle, Home, Payment, Settings } from '@mui/icons-material';  // הוספת Settings
 import { useNavigate } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
@@ -22,7 +22,13 @@ const CustomAppBar = () => {
   const [userName, setUserName] = useState('אורח');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-
+  const pages = [
+    { name: 'דף הבית', path: '/' },
+    { name: 'תשלומים', path: '/payment' },
+    { name: 'מידע', path: '/about' },
+    { name: 'צור קשר', path: '/contact' },
+    { name: 'ניהול', path: '/admin' } // הוספת כפתור ניהול לתפריט
+  ];
   // בדיקה אם המשתמש מחובר בטעינת הקומפוננטה
   useEffect(() => {
     checkUserLoggedIn();
@@ -112,6 +118,15 @@ const CustomAppBar = () => {
           <Box sx={{ flexGrow: 1 }} />
 
           {/* כפתורי ניווט בצד שמאל */}
+          <Button 
+            color="inherit" 
+            onClick={() => navigate('/admin')}
+            startIcon={<Settings />}
+            sx={{ ml: 1 }}
+          >
+            ניהול
+          </Button>
+
           <Button 
             color="inherit" 
             onClick={() => navigate('/payment')}
