@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Box,
@@ -6,7 +6,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import { login } from "../services/api";
+import { login, getUserDetails } from "../services/api";
 
 const style = {
   position: "absolute",
@@ -41,6 +41,30 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
   });
 
   const [generalError, setGeneralError] = useState("");
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (open) {
+      resetForm();
+    }
+  }, [open]);
+
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      phone: "",
+      password: "",
+    });
+    setTouched({
+      phone: false,
+      password: false
+    });
+    setErrors({
+      phone: "",
+      password: ""
+    });
+    setGeneralError("");
+  };
 
   const validateField = (name, value, isSubmitting = false) => {
     if (!isSubmitting && !touched[name] && !value) return '';
@@ -89,15 +113,39 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
     if (!hasErrors) {
       try {
         const data = await login(formData.phone, formData.password);
-        localStorage.setItem('token', data.token); // שמירת הטוקן
-        localStorage.setItem('userId', data.userId); // שמירת userId
-        onClose(); // סגירת המודל
-        console.log('Login successful'); // הודעה בקונסול על התחברות מוצלחת
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
+        
+        // שמירת שם המשתמש אם קיים בתגובה
+        if (data.firstName) {
+          localStorage.setItem('firstName', data.firstName);
+        } 
+        // אם אין שם משתמש בתגובה, נסה לקבל אותו בבקשה נפרדת
+        else {
+          try {
+            const userDetails = await getUserDetails(data.userId);
+            if (userDetails && userDetails.firstName) {
+              localStorage.setItem('firstName', userDetails.firstName);
+            }
+          } catch (detailsError) {
+            console.error('שגיאה בקבלת פרטי משתמש:', detailsError);
+            // לא נציג שגיאה למשתמש כי ההתחברות כבר הצליחה
+          }
+        }
+        
+        resetForm(); // Reset form after successful login
+        onClose();
         window.dispatchEvent(new Event('userChange'));
       } catch (error) {
-        setGeneralError(error.message); // עדכון הודעת השגיאה הכללית
+        setGeneralError(error.message);
       }
     }
+  };
+
+  // Handle signup click with form reset
+  const handleSignupClick = () => {
+    resetForm();
+    onSignupClick();
   };
 
   return (
@@ -149,7 +197,7 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
             fullWidth
             variant="text"
             sx={{ mt: 1 }}
-            onClick={onSignupClick}
+            onClick={handleSignupClick} // Changed to use the new handler
           >
             אין לך חשבון? הירשם כאן
           </Button>

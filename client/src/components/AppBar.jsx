@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Toolbar, 
   Typography, 
   Button, 
   IconButton,
-  Box 
+  Box,
+  Chip,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import { AccountCircle, Home, Payment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -16,56 +19,135 @@ const CustomAppBar = () => {
   const navigate = useNavigate();
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+  const [userName, setUserName] = useState('אורח');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleOpenLogin = () => setLoginOpen(true);
+  // בדיקה אם המשתמש מחובר בטעינת הקומפוננטה
+  useEffect(() => {
+    checkUserLoggedIn();
+    
+    // האזנה לשינויים במשתמש
+    window.addEventListener('userChange', checkUserLoggedIn);
+    
+    return () => {
+      window.removeEventListener('userChange', checkUserLoggedIn);
+    };
+  }, []);
+
+  // פונקציה לבדיקה אם המשתמש מחובר
+  const checkUserLoggedIn = () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    const firstName = localStorage.getItem('firstName');
+    
+    if (token && userId) {
+      setIsLoggedIn(true);
+      setUserName(firstName || 'משתמש');
+    } else {
+      setIsLoggedIn(false);
+      setUserName('אורח');
+    }
+  };
+
+  const handleOpenLogin = () => {
+    setAnchorEl(null);
+    setLoginOpen(true);
+  };
+  
   const handleCloseLogin = () => setLoginOpen(false);
+  
   const handleOpenSignup = () => {
     setLoginOpen(false);
     setSignupOpen(true);
   };
+  
   const handleCloseSignup = () => setSignupOpen(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('firstName');
+    setIsLoggedIn(false);
+    setUserName('אורח');
+    setAnchorEl(null);
+    window.dispatchEvent(new Event('userChange'));
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <>
       <AppBar position="static" dir="rtl">
         <Toolbar>
-          <IconButton 
-            color="inherit"
-            onClick={handleOpenLogin}
-            sx={{ mr: 2 }}
-          >
-            <AccountCircle />
-          </IconButton>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/')}
-              startIcon={<Home />}
-            >
-              בית
-            </Button>
-            
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/payment')}
-              startIcon={<Payment />}
-            >
-              תשלומים
-            </Button>
-          </Box>
-
+          {/* שם המשתמש והאייקון בצד ימין */}
           <Typography 
             variant="h6" 
             component="div"
             sx={{ 
               fontWeight: 'bold',
-              borderRight: '2px solid white',
-              paddingRight: 2
+              marginRight: 2
             }}
           >
-            מערכת עליות
+            {userName}
           </Typography>
+
+          {/* אייקון משתמש עם תפריט */}
+          <IconButton 
+            color="inherit"
+            onClick={handleMenuOpen}
+            title={isLoggedIn ? "אפשרויות משתמש" : "התחבר"}
+            sx={{ mr: 2 }}
+          >
+            <AccountCircle />
+          </IconButton>
+          
+          {/* מרווח גמיש */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* כפתורי ניווט בצד שמאל */}
+          <Button 
+            color="inherit" 
+            onClick={() => navigate('/payment')}
+            startIcon={<Payment />}
+            sx={{ ml: 1 }}
+          >
+            תשלומים
+          </Button>
+          
+          <Button 
+            color="inherit" 
+            onClick={() => navigate('/')}
+            startIcon={<Home />}
+          >
+            בית
+          </Button>
+          
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            {isLoggedIn ? (
+              <MenuItem onClick={handleLogout}>התנתק</MenuItem>
+            ) : (
+              <MenuItem onClick={handleOpenLogin}>התחבר</MenuItem>
+            )}
+          </Menu>
         </Toolbar>
       </AppBar>
 

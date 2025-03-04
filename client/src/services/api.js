@@ -13,6 +13,16 @@ export const login = async (phone, password) => {
   }
 };
 
+// פונקציה חדשה לקבלת פרטי המשתמש
+export const getUserDetails = async (userId) => {
+  try {
+    const response = await api.get(`/auth/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'אירעה שגיאה בקבלת פרטי המשתמש' };
+  }
+};
+
 export const register = async (userData) => {
   try {
     const response = await api.post('/auth/register', userData);

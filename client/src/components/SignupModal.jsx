@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Box,
@@ -51,13 +51,44 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
     password: "",
     confirmPassword: ""
   });
-
   const [generalError, setGeneralError] = useState("");
-
+  // Reset form when modal opens
+  useEffect(() => {
+    if (open) {
+      resetForm();
+    }
+  }, [open]);
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      fatherName: "",
+      lastName: "",
+      phone: "",
+      password: "",
+      confirmPassword: ""
+    });
+    setTouched({
+      firstName: false,
+      fatherName: false,
+      lastName: false,
+      phone: false,
+      password: false,
+      confirmPassword: false
+    });
+    setErrors({
+      firstName: "",
+      fatherName: "",
+      lastName: "",
+      phone: "",
+      password: "",
+      confirmPassword: ""
+    });
+    setGeneralError("");
+  };
   const validateField = (name, value, isSubmitting = false) => {
     if (!isSubmitting && !touched[name] && !value) return '';
-
-    switch (name) {
+  switch (name) {
       case 'firstName':
       case 'fatherName':
       case 'lastName':
@@ -76,7 +107,6 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
         return '';
     }
   };
-
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
     setTouched(prev => ({ ...prev, [name]: true }));
@@ -94,7 +124,6 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
       setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -124,14 +153,21 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
         const data = await register(registerData);
         localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.userId);
+        localStorage.setItem('firstName', formData.firstName); // שמירת שם המשתמש
+        resetForm(); // Reset form after successful registration
         onClose();
+        window.dispatchEvent(new Event('userChange'));
       } catch (error) {
-        // טיפול מפורט יותר בשגיאות
         const errorMessage = error.message || 'אירעה שגיאה בתהליך ההרשמה';
         console.error('Registration error:', error);
         setGeneralError(errorMessage);
       }
     }
+  };
+  // Handle login click with form reset
+  const handleLoginClick = () => {
+    resetForm();
+    onLoginClick();
   };
   return (
     <Modal open={open} onClose={onClose}>
@@ -228,10 +264,7 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
             fullWidth
             variant="text"
             sx={{ mt: 1 }}
-            onClick={() => {
-              onClose();
-              onLoginClick();
-            }}
+            onClick={handleLoginClick} // Changed to use the new handler
           >
             כבר יש לך חשבון? התחבר כאן
           </Button>

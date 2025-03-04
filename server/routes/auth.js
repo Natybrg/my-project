@@ -84,7 +84,6 @@ router.post("/register", validateRegistration, async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
 // נתיב התחברות
 router.post("/login", validateLogin, async (req, res) => {
   try {
@@ -108,7 +107,8 @@ router.post("/login", validateLogin, async (req, res) => {
       process.env.JWT_SECRET || "your-secret-key",
       { expiresIn: "24h" }
     );
-    res.json({ token, userId: user._id }); // כלול userId בתגובה
+    // Include firstName in the response
+    res.json({ token, userId: user._id, firstName: user.firstName }); 
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -122,5 +122,16 @@ router.get("/users", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
+// נתיב לקבלת פרטי משתמש
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId, "-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 module.exports = router;

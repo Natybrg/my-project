@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  rols: {
+    type: String,
+    enum: ['admin', 'user'],
+    default: 'user'
+  },
   debts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Debt'
