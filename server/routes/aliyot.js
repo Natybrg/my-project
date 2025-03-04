@@ -40,7 +40,7 @@ router.post('/addAliyah',verifyGabay ,auth, async (req, res) => {
 });
 
 // Get user's aliyot
-router.get('/:userId/aliyot', verifyUser ,auth, async (req, res) => {
+router.get('/:userId/aliyot',auth, async (req, res) => {
   try {
       const { userId } = req.params;
       const user = await User.findById(userId).populate('debts');
