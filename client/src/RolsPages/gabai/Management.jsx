@@ -9,7 +9,7 @@ import {
   ListItemText,
   TextField,
 } from '@mui/material';
-import axios from 'axios';
+import {getAllUsers} from '../../services/api';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -22,13 +22,19 @@ const UserManagementPage = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/users');
-        setUsers(response.data);
+        const response = await getAllUsers();
+        setUsers(response);
         setError(null);
       } catch (error) {
         console.error('Error fetching users:', error);
         setUsers([]);
-        setError('שגיאה: לא ניתן לטעון את המשתמשים. אנא בדוק את ה-API או את החיבור לאינטרנט.');
+        if (error.code === 'ERR_NETWORK') {
+          setError('שגיאה: לא ניתן להתחבר לשרת. אנא ודא שהשרת פועל בפורט 3001.');
+        } else if (error.response) {
+          setError(`שגיאה: שרת החזיר קוד סטטוס ${error.response.status}.`);
+        } else {
+          setError('שגיאה: לא ניתן לטעון את המשתמשים. אנא בדוק את ה-API או את החיבור לאינטרנט.');
+        }
       } finally {
         setLoading(false);
       }
@@ -115,3 +121,4 @@ const UserManagementPage = () => {
 };
 
 export default UserManagementPage;
+

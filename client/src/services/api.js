@@ -69,7 +69,8 @@ export const getAllUsers = async () => {
     const response = await api.get('/users');
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    console.error('Error fetching users:', error);
+    throw { message: 'אירעה שגיאה בטעינת המשתמשים' };
   }
 };
 
