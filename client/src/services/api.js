@@ -49,7 +49,7 @@ export const getUserAliyot = async (userId) => {
     const response = await api.get(`/aliyot/${userId}/aliyot`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw error.response?.data || { message: 'אירעה שגיאה בקבלת עליות' };
   }
 };
 
@@ -76,13 +76,33 @@ api.interceptors.response.use(
 );
 export const getAllUsers = async () => {
   try {
-    const response = await api.get('/users');
+    const response = await api.get('/auth/users');
     return response.data;
   } catch (error) {
-    console.error('Error fetching users:', error);
-    throw { message: 'אירעה שגיאה בטעינת המשתמשים' };
+    throw error.response?.data || { message: 'אירעה שגיאה בקבלת רשימת משתמשים' };
   }
 };
+export const updateUser = async (userId, userData) => {
+  try {
+    const response = await api.put(`/auth/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'אירעה שגיאה בעדכון המשתמש' };
+  }
+};
+
+export const createAliya = async (userId, aliyaData) => {
+  try {
+    const response = await api.post(`/aliyot/addAliyah`, {
+      ...aliyaData,
+      userId: userId,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
 
 
 export default api;

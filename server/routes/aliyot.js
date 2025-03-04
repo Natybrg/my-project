@@ -1,61 +1,80 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Debt = require('../models/Debt');
 const auth = require('../middleware/auth');
 
-// הוספת עליה למשתמש
+// Add Aliyah to user
 router.post('/addAliyah', async (req, res) => {
   try {
-    const { userId, parsha, aliyaType, amount } = req.body;
-    const aliyah = new Debt({ userId, parsha, aliyaType, amount });
-    await aliyah.save();
+      const { userId, parsha, aliyaType, amount, isPaid } = req.body;
 
-    const user = await User.findById(userId);
-    user.debts.push(aliyah._id);
-    await user.save();
+      if (!userId || !parsha || !aliyaType || amount === undefined || isPaid === undefined) {
+          return res.status(400).json({ message: 'Missing required fields' });
+      }
+      if (isNaN(amount) || amount < 0) {
+          return res.status(400).json({ message: 'Invalid amount' });
+      }
+      if (!mongoose.Types.ObjectId.isValid(userId)) { // שורה 20 - בדיקה
+          return res.status(400).json({ message: 'Invalid userId' });
+      }
 
-    res.status(200).json({ message: 'Aliyah added successfully' });
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      const aliyah = new Debt({ userId, parsha, aliyaType, amount, isPaid });
+      await aliyah.save();
+
+      user.debts.push(aliyah._id);
+      await user.save();
+
+      const populatedUser = await User.findById(userId).populate('debts');
+      res.status(201).json({ message: 'Aliyah added successfully', user: populatedUser });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+      console.error('Error adding aliyah:', error);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
-// קבלת העליות של המשתמש
-router.get('/:userId/aliyot', async (req, res) => {
+// Get user's aliyot
+router.get('/:userId/aliyot', auth, async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).populate('debts');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
     res.status(200).json(user.debts);
   } catch (error) {
+    console.error('Error fetching aliyot:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Add this route to your aliyot.js file
-// עדכון סטטוס תשלום
-router.put('/payment/:paymentId', async (req, res) => {
+// Update payment status
+router.put('/payment/:paymentId', auth, async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { isPaid } = req.body;
-    
-    console.log('Updating payment:', paymentId, 'to isPaid:', isPaid); // הוספת לוג לדיבוג
-    
+
     const debt = await Debt.findById(paymentId);
     if (!debt) {
-      return res.status(404).json({ message: 'התשלום לא נמצא' });
+      return res.status(404).json({ message: 'Payment not found' });
     }
-    
+
     debt.isPaid = isPaid;
-    if (isPaid) {
-      debt.paidDate = new Date();
-    }
-    
+    debt.paidDate = isPaid ? new Date() : null;
+
     await debt.save();
-    res.status(200).json({ message: 'סטטוס התשלום עודכן בהצלחה' });
+    res.status(200).json({ message: 'Payment status updated successfully' });
   } catch (error) {
-    console.error('Error updating payment:', error); // הוספת לוג לדיבוג
-    res.status(500).json({ message: error.message });
+    console.error('Error updating payment:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 module.exports = router;
+

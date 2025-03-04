@@ -24,7 +24,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/about" element={<DataforShabat />} />
-          <Route path="/contact" element={<UserManagementPage/>} />
+          <Route path="/management" element={<UserManagementPage/>} />
           <Route path="/profile" element={<div>פרופיל</div>} />
         </Routes>
       </BrowserRouter>
