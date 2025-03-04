@@ -25,7 +25,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/about" element={<DataforShabat />} />
-          <Route path="/management" element={<UserManagementPage/>} />
+          <Route path="/admin/management" element={<UserManagementPage/>} />
           <Route path="/profile" element={<div>פרופיל</div>} />
           <Route path="/admin" element={<AdminPage />} />  {/* דף ניהול ראשי */}
           {/* בעתיד תוכל להוסיף כאן נתיבים נוספים לדפי ניהול ספציפיים */}

@@ -9,7 +9,7 @@ const AdminPage = () => {
     {
       title: 'ניהול משתמשים',
       description: 'צפייה, עריכה והוספת משתמשים',
-      path: '/contact' // הנתיב הקיים לדף ניהול המשתמשים
+      path: '/admin/management' // הנתיב הקיים לדף ניהול המשתמשים
     },
     {
       title: 'ניהול תשלומים',
