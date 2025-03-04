@@ -123,4 +123,17 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.put("/users/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findByIdAndUpdate(userId, req.body, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 module.exports = router;
