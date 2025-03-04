@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
+const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require('../middleware/loginMiddelwares');
 const validateRegistration = (req, res, next) => {
   const { firstName, fatherName, lastName, phone, password } = req.body;
   const errors = [];
@@ -114,7 +114,7 @@ router.post("/login", validateLogin, async (req, res) => {
   }
 });
 
-router.get("/users", async (req, res) => {
+router.get("/users",{verifyAdmin, verifyGabay, verifyManager} ,async (req, res) => {
   try {
     const users = await User.find({});
     res.json(users);
@@ -123,7 +123,7 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.put("/users/:userId", async (req, res) => {
+router.put("/users/:userId",{verifyUser,verifyAdmin, verifyGabay, verifyManager} , async (req, res) => {
   try {
     const userId = req.params.userId;
     const user = await User.findByIdAndUpdate(userId, req.body, { new: true });

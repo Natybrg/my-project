@@ -4,9 +4,10 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Debt = require('../models/Debt');
 const auth = require('../middleware/auth');
+const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require('../middleware/loginMiddelwares');
 
 // Add Aliyah to user
-router.post('/addAliyah', async (req, res) => {
+router.post('/addAliyah',{ verifyGabay, verifyManager, verifyAdmin },auth ,async (req, res) => {
   try {
       const { userId, parsha, aliyaType, amount, isPaid } = req.body;
 
@@ -19,7 +20,6 @@ router.post('/addAliyah', async (req, res) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) { // שורה 20 - בדיקה
           return res.status(400).json({ message: 'Invalid userId' });
       }
-
       const user = await User.findById(userId);
       if (!user) {
           return res.status(404).json({ message: 'User not found' });
@@ -40,7 +40,7 @@ router.post('/addAliyah', async (req, res) => {
 });
 
 // Get user's aliyot
-router.get('/:userId/aliyot', auth, async (req, res) => {
+router.get('/:userId/aliyot',{ verifyGabay, verifyManager, verifyAdmin }, auth, async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).populate('debts');
@@ -55,7 +55,7 @@ router.get('/:userId/aliyot', auth, async (req, res) => {
 });
 
 // Update payment status
-router.put('/payment/:paymentId', auth, async (req, res) => {
+router.put('/payment/:paymentId',{ verifyUser,verifyGabay, verifyManager, verifyAdmin }, auth, async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { isPaid } = req.body;
