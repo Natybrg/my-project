@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require('../middleware/loginMiddelwares');
 
 // Add Aliyah to user
-router.post('/addAliyah',{ verifyGabay, verifyManager, verifyAdmin },auth ,async (req, res) => {
+router.post('/addAliyah', auth, async (req, res) => {
   try {
       const { userId, parsha, aliyaType, amount, isPaid } = req.body;
 
@@ -17,7 +17,7 @@ router.post('/addAliyah',{ verifyGabay, verifyManager, verifyAdmin },auth ,async
       if (isNaN(amount) || amount < 0) {
           return res.status(400).json({ message: 'Invalid amount' });
       }
-      if (!mongoose.Types.ObjectId.isValid(userId)) { // שורה 20 - בדיקה
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
           return res.status(400).json({ message: 'Invalid userId' });
       }
       const user = await User.findById(userId);
@@ -40,39 +40,45 @@ router.post('/addAliyah',{ verifyGabay, verifyManager, verifyAdmin },auth ,async
 });
 
 // Get user's aliyot
-router.get('/:userId/aliyot',{ verifyGabay, verifyManager, verifyAdmin }, auth, async (req, res) => {
+router.get('/:userId/aliyot',  auth, async (req, res) => {
   try {
-    const { userId } = req.params;
-    const user = await User.findById(userId).populate('debts');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json(user.debts);
+      const { userId } = req.params;
+      const user = await User.findById(userId).populate('debts');
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+      res.status(200).json(user.debts);
   } catch (error) {
-    console.error('Error fetching aliyot:', error);
-    res.status(500).json({ message: error.message });
+      console.error('Error fetching aliyot:', error);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
 // Update payment status
-router.put('/payment/:paymentId',{ verifyUser,verifyGabay, verifyManager, verifyAdmin }, auth, async (req, res) => {
+router.put('/payment/:paymentId', auth, async (req, res) => {
   try {
-    const { paymentId } = req.params;
-    const { isPaid } = req.body;
+      const { paymentId } = req.params;
+      const { isPaid } = req.body;
+      const requestingUserId = req.user.id;
+      const requestingUserRols = req.user.rols;
 
-    const debt = await Debt.findById(paymentId);
-    if (!debt) {
-      return res.status(404).json({ message: 'Payment not found' });
-    }
+      const debt = await Debt.findById(paymentId);
+      if (!debt) {
+          return res.status(404).json({ message: 'Payment not found' });
+      }
 
-    debt.isPaid = isPaid;
-    debt.paidDate = isPaid ? new Date() : null;
+      if (debt.userId.toString() !== requestingUserId && requestingUserRols !== 'admin' && requestingUserRols !== 'gabay' && requestingUserRols !== 'manager') {
+          return res.status(403).json({ message: "Forbidden: You are not authorized to update this payment" });
+      }
 
-    await debt.save();
-    res.status(200).json({ message: 'Payment status updated successfully' });
+      debt.isPaid = isPaid;
+      debt.paidDate = isPaid ? new Date() : null;
+
+      await debt.save();
+      res.status(200).json({ message: 'Payment status updated successfully' });
   } catch (error) {
-    console.error('Error updating payment:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+      console.error('Error updating payment:', error);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
