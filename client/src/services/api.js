@@ -44,18 +44,13 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
     throw error.response?.data || { message: 'אירעה שגיאה בעדכון התשלום' };
   }
 };
- // api.js
-export const getUserAliyot = async (userId, token) => {
-    try {
-        const response = await axios.get(`<span class="math-inline">\{API\_URL\}/aliyot/</span>{userId}/aliyot`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response?.data || error;
-    }
+export const getUserAliyot = async (userId) => {
+  try {
+    const response = await api.get(`/aliyot/${userId}/aliyot`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'אירעה שגיאה בקבלת עליות' };
+  }
 };
 
 // Request interceptor - הוספת טוקן לכל בקשה

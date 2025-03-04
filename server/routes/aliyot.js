@@ -4,10 +4,10 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Debt = require('../models/Debt');
 const auth = require('../middleware/auth');
-const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require('../middleware/loginMiddelwares');
+const { verifyGabay, verifyUser } = require('../middleware/loginMiddelwares');
 
 // Add Aliyah to user
-router.post('/addAliyah', auth, async (req, res) => {
+router.post('/addAliyah',verifyGabay ,auth, async (req, res) => {
   try {
       const { userId, parsha, aliyaType, amount, isPaid } = req.body;
 
@@ -40,7 +40,7 @@ router.post('/addAliyah', auth, async (req, res) => {
 });
 
 // Get user's aliyot
-router.get('/:userId/aliyot',  auth, async (req, res) => {
+router.get('/:userId/aliyot', verifyUser ,auth, async (req, res) => {
   try {
       const { userId } = req.params;
       const user = await User.findById(userId).populate('debts');
@@ -55,19 +55,26 @@ router.get('/:userId/aliyot',  auth, async (req, res) => {
 });
 
 // Update payment status
-router.put('/payment/:paymentId', auth, async (req, res) => {
+router.put('/payment/:paymentId', verifyUser, auth, async (req, res) => {
   try {
       const { paymentId } = req.params;
       const { isPaid } = req.body;
       const requestingUserId = req.user.id;
       const requestingUserRols = req.user.rols;
 
+      if (typeof isPaid !== 'boolean') {
+          return res.status(400).json({ message: 'Invalid isPaid value' });
+      }
+
       const debt = await Debt.findById(paymentId);
       if (!debt) {
           return res.status(404).json({ message: 'Payment not found' });
       }
 
-      if (debt.userId.toString() !== requestingUserId && requestingUserRols !== 'admin' && requestingUserRols !== 'gabay' && requestingUserRols !== 'manager') {
+      if (debt.userId.toString() !== requestingUserId &&
+          requestingUserRols !== 'admin' &&
+          requestingUserRols !== 'gabay' &&
+          requestingUserRols !== 'manager') {
           return res.status(403).json({ message: "Forbidden: You are not authorized to update this payment" });
       }
 
@@ -78,6 +85,9 @@ router.put('/payment/:paymentId', auth, async (req, res) => {
       res.status(200).json({ message: 'Payment status updated successfully' });
   } catch (error) {
       console.error('Error updating payment:', error);
+      if (error.name === 'CastError') {
+          return res.status(400).json({ message: 'Invalid paymentId', error: error.message });
+      }
       res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
