@@ -43,7 +43,7 @@ app.get('/debug/routes', (req, res) => {
 });
 
 // MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/aliyot_db')
+mongoose.connect('mongodb+srv://israel:12345654321@cluster0.htxff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('Could not connect to MongoDB:', err));
 

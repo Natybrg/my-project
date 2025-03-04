@@ -64,5 +64,14 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+export const getAllUsers = async () => {
+  try {
+    const response = await api.get('/users');
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
 
 export default api;

@@ -122,5 +122,39 @@ router.get("/users", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+// api/users.js
+
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, fatherName, lastName, phone } = req.body;
+
+    // Validate if user exists
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user fields
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          firstName,
+          fatherName,
+          lastName,
+          phone
+        }
+      },
+      { new: true } // Return the updated document
+    );
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 module.exports = router;
