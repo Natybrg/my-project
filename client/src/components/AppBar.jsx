@@ -21,13 +21,14 @@ const CustomAppBar = () => {
   const [signupOpen, setSignupOpen] = useState(false);
   const [userName, setUserName] = useState('אורח');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const pages = [
     { name: 'דף הבית', path: '/' },
     { name: 'תשלומים', path: '/payment' },
     { name: 'מידע', path: '/about' },
-    { name: 'צור קשר', path: '/contact' },
-    { name: 'ניהול', path: '/admin' } // הוספת כפתור ניהול לתפריט
+    { name: 'צור קשר', path: '/contact' }
+    // ניהול יוצג רק למשתמשים מסוג מנהל או גבאי
   ];
   // בדיקה אם המשתמש מחובר בטעינת הקומפוננטה
   useEffect(() => {
@@ -46,13 +47,16 @@ const CustomAppBar = () => {
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId');
     const firstName = localStorage.getItem('firstName');
+    const userRole = localStorage.getItem('userRole');
     
     if (token && userId) {
       setIsLoggedIn(true);
       setUserName(firstName || 'משתמש');
+      setIsAdmin(userRole === 'admin' || userRole === 'gabai' || userRole === 'manager');
     } else {
       setIsLoggedIn(false);
       setUserName('אורח');
+      setIsAdmin(false);
     }
   };
 
@@ -74,10 +78,13 @@ const CustomAppBar = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('firstName');
+    localStorage.removeItem('userRole');
     setIsLoggedIn(false);
     setUserName('אורח');
+    setIsAdmin(false);
     setAnchorEl(null);
     window.dispatchEvent(new Event('userChange'));
+    navigate('/');  // חזרה לדף הבית אחרי התנתקות
   };
 
   const handleMenuOpen = (event) => {
@@ -118,14 +125,16 @@ const CustomAppBar = () => {
           <Box sx={{ flexGrow: 1 }} />
 
           {/* כפתורי ניווט בצד שמאל */}
-          <Button 
-            color="inherit" 
-            onClick={() => navigate('/admin')}
-            startIcon={<Settings />}
-            sx={{ ml: 1 }}
-          >
-            ניהול
-          </Button>
+          {isAdmin && (
+            <Button 
+              color="inherit" 
+              onClick={() => navigate('/admin')}
+              startIcon={<Settings />}
+              sx={{ ml: 1 }}
+            >
+              ניהול
+            </Button>
+          )}
 
           <Button 
             color="inherit" 

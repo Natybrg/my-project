@@ -133,6 +133,17 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
           }
         }
         
+        // שמירת תפקיד המשתמש
+        if (data.role) {
+          localStorage.setItem('userRole', data.role);
+        } else if (data.rol) {
+          // תמיכה גם ב-rol לצורך תאימות לאחור
+          localStorage.setItem('userRole', data.rol);
+        }
+        
+        // הדפסת מידע ללוג (בסביבת פיתוח בלבד)
+        console.log("Login successful with role:", data.role || data.rol);
+        
         resetForm(); // Reset form after successful login
         onClose();
         window.dispatchEvent(new Event('userChange'));

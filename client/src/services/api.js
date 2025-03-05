@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:3001',
+  baseURL: 'http://127.0.0.1:3002',
 });
 
 export const login = async (phone, password) => {
@@ -35,7 +35,7 @@ export const register = async (userData) => {
     }
   }
 };
-// Add this function to your api.js file
+// Update payment status to fully paid
 export const updatePaymentStatus = async (paymentId, isPaid) => {
   try {
     const response = await api.put(`/aliyot/payment/${paymentId}`, { isPaid });
@@ -44,36 +44,47 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
     throw error.response?.data || { message: 'אירעה שגיאה בעדכון התשלום' };
   }
 };
-export const getUserAliyot = async (userId) => {
+
+// Add a new function for partial payments
+export const makePartialPayment = async (paymentId, amount, note = '') => {
   try {
-    const response = await api.get(`/aliyot/${userId}/aliyot`);
+    const response = await api.post(`/aliyot/payment/${paymentId}/partial`, { amount, note });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'אירעה שגיאה בקבלת עליות' };
+    throw error.response?.data || { message: 'אירעה שגיאה בביצוע התשלום החלקי' };
   }
 };
 
-// Request interceptor - הוספת טוקן לכל בקשה
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export const getUserAliyot = async (userId) => {
+  try {
+    const response = await api.get(`/aliyot/${userId}/aliyot`);
+    return response?.data || []; 
+  } catch (error) {
+    console.error('Error fetching user aliyot:', error);
+    return []; 
   }
-  return config;
-});
+};
 
-// Response interceptor - טיפול בשגיאות אימות
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.dispatchEvent(new Event('userChange'));
-    }
-    return Promise.reject(error);
+// Get user details with debts (admin/gabai view)
+export const getUserWithDebts = async (userId) => {
+  try {
+    const response = await api.get(`/aliyot/user/${userId}/details`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'אירעה שגיאה בקבלת פרטי משתמש וחובות' };
   }
-);
+};
+
+// Update debt details
+export const updateDebtDetails = async (debtId, debtData) => {
+  try {
+    const response = await api.put(`/aliyot/debt/${debtId}`, debtData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'אירעה שגיאה בעדכון פרטי החוב' };
+  }
+};
+
 export const getAllUsers = async () => {
   try {
     const response = await api.get('/auth/users');
@@ -103,6 +114,26 @@ export const createAliya = async (userId, aliyaData) => {
   }
 };
 
+// Request interceptor - הוספת טוקן לכל בקשה
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
+// Response interceptor - טיפול בשגיאות אימות
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.dispatchEvent(new Event('userChange'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

@@ -3,8 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { verifyGabay ,verifyUser} = require("../middleware/loginMiddelwares");
-// const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require('../middleware/loginMiddelwares');
+const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require("../middleware/loginMiddelwares");
 
 const validateRegistration = (req, res, next) => {
   const { firstName, fatherName, lastName, phone, password } = req.body;
@@ -88,7 +87,7 @@ router.post("/register", validateRegistration, async (req, res) => {
       if (!process.env.TOKEN_SECRET) {
           throw new Error('TOKEN_SECRET is not defined in environment variables');
       }
-      const token = jwt.sign({ userId: user._id, rol: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
+      const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
       res.status(201).json({ token, userId: user._id });
   } catch (error) {
       console.error('Registration error:', error);
@@ -98,40 +97,60 @@ router.post("/register", validateRegistration, async (req, res) => {
 // Login route
 router.post("/login", validateLogin, async (req, res) => {
   try {
-      const { phone, password } = req.body;
+    const { phone, password } = req.body;
 
-      const user = await User.findOne({ phone });
-      if (!user) {
-          return res.status(400).json({ message: "User not found" });
-      }
+    // Find user by phone
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(400).json({ message: "מספר טלפון או סיסמה שגויים" });
+    }
 
-      let isMatch;
-      try {
-          isMatch = await bcrypt.compare(password, user.password);
-      } catch (bcryptError) {
-          console.error('bcrypt compare error:', bcryptError);
-          return res.status(500).json({ message: "Server error", error: "Failed to compare passwords" });
-      }
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "מספר טלפון או סיסמה שגויים" });
+    }
 
-      if (!isMatch) {
-          return res.status(400).json({ message: "Invalid credentials" });
-      }
+    // Create JWT token
+    const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
 
-      if (!process.env.TOKEN_SECRET) {
-          return res.status(500).json({ message: "Server error", error: "TOKEN_SECRET is not defined in environment variables" });
-      }
-
-      const token = jwt.sign({ userId: user._id, rol: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
-      res.json({ token, userId: user._id, firstName: user.firstName, rol: user.rols });
+    // Return token and user info
+    res.json({
+      token,
+      userId: user._id,
+      firstName: user.firstName,
+      role: user.rols, // שימוש ב-role לעקביות
+      rol: user.rols, // שמירה על תאימות לאחור עם rol
+    });
   } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: "Server error", error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 // Get all users route
-router.get("/users", verifyGabay, async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({});
+    // בדיקת הרשאות - רק מנהל, גבאי או מנג'ר יכולים לראות את כל המשתמשים
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'אין הרשאה לפעולה זו' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    
+    const requesterUser = await User.findById(decoded.userId);
+    if (!requesterUser || !['admin', 'gabai', 'manager'].includes(requesterUser.rols)) {
+      return res.status(403).json({ message: 'אין הרשאה לפעולה זו' });
+    }
+    
+    // אם המשתמש הוא מנג'ר, הוא יכול לראות רק גבאים ומשתמשים רגילים
+    let query = {};
+    if (requesterUser.rols === 'manager') {
+      query = { rols: { $in: ['gabai', 'user'] } };
+    }
+    
+    const users = await User.find(query);
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
@@ -139,9 +158,9 @@ router.get("/users", verifyGabay, async (req, res) => {
   }
 });
 
-// Update user route
-router.put("/users/:userId",verifyGabay ,async (req, res) => {
-  try{
+// Update user route - רק מנהל או גבאי יכולים לעדכן משתמשים
+router.put("/users/:userId", async (req, res) => {
+  try {
     const { userId } = req.params;
     const { firstName, fatherName, lastName, phone, password, rols = 'user' } = req.body;
 
@@ -167,4 +186,3 @@ router.put("/users/:userId",verifyGabay ,async (req, res) => {
 });
 
 module.exports = router;
-

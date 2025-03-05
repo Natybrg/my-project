@@ -12,7 +12,10 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
     
     // הוספת המידע על המשתמש לבקשה
-    req.user = { id: decoded.userId };
+    req.user = { 
+      id: decoded.userId,
+      role: decoded.role || decoded.rol  // תמיכה גם ב-role וגם ב-rol לצורך תאימות לאחור
+    };
     
     next();
   } catch (error) {
