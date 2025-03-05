@@ -18,10 +18,26 @@ import {
 } from '@mui/material';
 import { getAllUsers, updateUser, createAliya } from '../../services/api';
 
+const getRoleDisplayName = (role) => {
+  switch (role) {
+    case 'admin':
+      return 'מנהל';
+    case 'gabai':
+      return 'גבאי';
+    case 'manager':
+      return 'מנג\'ר';
+    case 'user':
+      return 'משתמש רגיל';
+    default:
+      return '';
+  }
+};
+
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchPhone, setSearchPhone] = useState('');
+  const [searchRole, setSearchRole] = useState('');  
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -30,6 +46,7 @@ const UserManagementPage = () => {
     phone: '',
     fatherName: '',
     lastName: '',
+    rols: '',
   });
   const [updateLoading, setUpdateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -126,7 +143,7 @@ const UserManagementPage = () => {
   };
 
   const filteredUsers = users.filter((user) =>
-    user && user.phone && user.phone.includes(searchPhone)
+    user && user.phone && user.phone.includes(searchPhone) && (searchRole === '' || user.rols === searchRole)
   );
 
   return (
@@ -145,6 +162,22 @@ const UserManagementPage = () => {
             margin="normal"
             sx={{ mr: 1 }}
           />
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="search-role-label">תפקיד</InputLabel>
+            <Select
+              labelId="search-role-label"
+              id="search-role-select"
+              value={searchRole}
+              label="תפקיד"
+              onChange={(e) => setSearchRole(e.target.value)}
+            >
+              <MenuItem value="">כל התפקידים</MenuItem>
+              <MenuItem value="admin">מנהל</MenuItem>
+              <MenuItem value="gabai">גבאי</MenuItem>
+              <MenuItem value="manager">מנג'ר</MenuItem>
+              <MenuItem value="user">משתמש רגיל</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
         {loading && <Typography>טוען...</Typography>}
         {error && <Typography color="error">{error.message}</Typography>}
@@ -152,7 +185,18 @@ const UserManagementPage = () => {
           <List sx={{ maxHeight: '300px', overflowY: 'auto' }}>
             {filteredUsers.map((user) => (
               <ListItem key={user._id} onClick={() => handleUserClick(user)}>
-                <ListItemText primary={user.firstName} sx={{ color: 'primary.main' }} />
+                <ListItemText 
+                  primary={`${user.firstName} ${user.lastName}`} 
+                  secondary={getRoleDisplayName(user.rols)} 
+                  sx={{ 
+                    color: 'primary.main',
+                    '& .MuiListItemText-secondary': {
+                      color: user.rols === 'gabai' ? 'success.main' : 
+                             user.rols === 'admin' ? 'error.main' : 
+                             user.rols === 'manager' ? 'info.main' : 'text.secondary'
+                    }
+                  }} 
+                />
               </ListItem>
             ))}
           </List>
@@ -167,7 +211,7 @@ const UserManagementPage = () => {
       {selectedUser && (
         <Paper sx={{ width: '40%', p: 2 }}>
           <Typography variant="h6" gutterBottom>
-            {selectedUser.firstName}
+            {selectedUser.firstName} {selectedUser.lastName} - {getRoleDisplayName(selectedUser.rols)}
           </Typography>
           {isEditing ? (
             <Box>
@@ -175,6 +219,21 @@ const UserManagementPage = () => {
               <TextField label="טלפון" name="phone" value={editedUser.phone} onChange={handleInputChange} fullWidth margin="normal" />
               <TextField label="שם אב" name="fatherName" value={editedUser.fatherName} onChange={handleInputChange} fullWidth margin="normal" />
               <TextField label="שם משפחה" name="lastName" value={editedUser.lastName} onChange={handleInputChange} fullWidth margin="normal" />
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="rols-label">תפקיד</InputLabel>
+                <Select
+                  labelId="rols-label"
+                  id="rols-select"
+                  value={editedUser.rols}
+                  label="תפקיד"
+                  onChange={(e) => setEditedUser({ ...editedUser, rols: e.target.value })}
+                >
+                  <MenuItem value="admin">מנהל</MenuItem>
+                  <MenuItem value="gabai">גבאי</MenuItem>
+                  <MenuItem value="manager">מנג'ר</MenuItem>
+                  <MenuItem value="user">משתמש רגיל</MenuItem>
+                </Select>
+              </FormControl>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                 <Button variant="contained" onClick={handleUpdate} disabled={updateLoading}>
                   {updateLoading ? <CircularProgress size={24} /> : 'שמור'}

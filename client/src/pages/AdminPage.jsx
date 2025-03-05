@@ -12,6 +12,11 @@ const AdminPage = () => {
       path: '/admin/management' // הנתיב הקיים לדף ניהול המשתמשים
     },
     {
+      title: 'ניהול חובות',
+      description: 'צפייה ועריכת חובות של משתמשים',
+      path: '/admin/debts'
+    },
+    {
       title: 'ניהול תשלומים',
       description: 'מעקב אחר תשלומים וחובות',
       path: '/admin/payments'

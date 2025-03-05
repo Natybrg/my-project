@@ -2,12 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const authRoutes = require('./routes/auth');
 const aliyotRoutes = require('./routes/aliyot'); // הוסף את השורה הזו
 
 // Load environment variables
-dotenv.config();
-
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
 // Middleware
@@ -43,8 +43,11 @@ app.get('/debug/routes', (req, res) => {
 });
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://israel:12345654321@cluster0.htxff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-  .then(() => console.log('Connected to MongoDB'))
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://israel:12345654321@cluster0.htxff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+console.log('Connecting to MongoDB...');
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('Connected to MongoDB successfully!'))
   .catch((err) => console.error('Could not connect to MongoDB:', err));
 
 // Basic route for testing
@@ -53,7 +56,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // Start server
-const PORT =  3001;
+const PORT = 3002; // Hardcoded port to avoid conflicts
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
