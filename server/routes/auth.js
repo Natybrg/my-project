@@ -37,18 +37,28 @@ const validateRegistration = (req, res, next) => {
 };
 
 const validateLogin = (req, res, next) => {
+  console.log("Login request body:", req.body);
+  
   const { phone, password } = req.body;
   const errors = [];
 
-  if (!phone || !/^\d{10}$/.test(phone)) {
+  console.log("Phone received:", phone, "Type:", typeof phone);
+  console.log("Password received:", password ? "***" : "undefined", "Type:", typeof password);
+
+  if (!phone) {
+    errors.push("מספר טלפון חסר");
+  } else if (!/^\d{10}$/.test(phone)) {
     errors.push("מספר טלפון חייב להכיל בדיוק 10 ספרות");
   }
 
-  if (!password || password.length < 6) {
+  if (!password) {
+    errors.push("סיסמה חסרה");
+  } else if (password.length < 6) {
     errors.push("סיסמה חייבת להכיל לפחות 6 תווים");
   }
 
   if (errors.length > 0) {
+    console.log("Validation errors:", errors);
     return res.status(400).json({ errors });
   }
 
@@ -65,29 +75,22 @@ router.post("/register", validateRegistration, async (req, res) => {
           return res.status(400).json({ message: "משתמש קיים במערכת" });
       }
 
-      let hashedPassword;
-      try {
-          hashedPassword = await bcrypt.hash(password, 10);
-      } catch (bcryptError) {
-          console.error('bcrypt hash error:', bcryptError);
-          return res.status(500).json({ message: "Server error", error: "Failed to hash password" });
-      }
-
+      // Create new user - password will be hashed by the pre-save hook in the User model
       const user = new User({
           firstName,
           fatherName,
           lastName,
           phone,
-          password: hashedPassword,
+          password, // No need to hash here, the model will do it
           rols: rols || 'user'
       });
 
       await user.save();
 
-      if (!process.env.TOKEN_SECRET) {
-          throw new Error('TOKEN_SECRET is not defined in environment variables');
+      if (!process.env.JWT_SECRET) {
+          throw new Error('JWT_SECRET is not defined in environment variables');
       }
-      const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
+      const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.JWT_SECRET, { expiresIn: "24h" });
       res.status(201).json({ token, userId: user._id });
   } catch (error) {
       console.error('Registration error:', error);
@@ -98,21 +101,39 @@ router.post("/register", validateRegistration, async (req, res) => {
 router.post("/login", validateLogin, async (req, res) => {
   try {
     const { phone, password } = req.body;
+    console.log("Login attempt with:", { phone, password: password ? "***" : "undefined" });
 
     // Find user by phone
     const user = await User.findOne({ phone });
     if (!user) {
+      console.log("User not found with phone:", phone);
       return res.status(400).json({ message: "מספר טלפון או סיסמה שגויים" });
     }
+    console.log("User found:", {
+      id: user._id,
+      firstName: user.firstName,
+      role: user.rols,
+      hasPassword: !!user.password
+    });
 
-    // Validate password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "מספר טלפון או סיסמה שגויים" });
+    // Validate password using the model's method
+    console.log("Comparing password...");
+    try {
+      // Use the User model's comparePassword method
+      const isMatch = await user.comparePassword(password);
+      console.log("Password match result:", isMatch);
+      
+      if (!isMatch) {
+        console.log("Password does not match");
+        return res.status(400).json({ message: "מספר טלפון או סיסמה שגויים" });
+      }
+    } catch (bcryptError) {
+      console.error("Password comparison error:", bcryptError);
+      return res.status(500).json({ message: "שגיאה באימות סיסמה", error: bcryptError.message });
     }
 
     // Create JWT token
-    const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.TOKEN_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ userId: user._id, role: user.rols }, process.env.JWT_SECRET, { expiresIn: "24h" });
 
     // Return token and user info
     res.json({
@@ -137,7 +158,7 @@ router.get("/users", async (req, res) => {
     }
     
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     const requesterUser = await User.findById(decoded.userId);
     if (!requesterUser || !['admin', 'gabai', 'manager'].includes(requesterUser.rols)) {
@@ -182,6 +203,37 @@ router.put("/users/:userId", async (req, res) => {
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Reset password route
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { phone, newPassword } = req.body;
+    
+    // Validate inputs
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: "מספר טלפון חייב להכיל בדיוק 10 ספרות" });
+    }
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "סיסמה חייבת להכיל לפחות 6 תווים" });
+    }
+    
+    // Find user by phone
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "משתמש לא נמצא" });
+    }
+    
+    // Update password
+    user.password = newPassword; // Will be hashed by the pre-save hook
+    await user.save();
+    
+    res.json({ message: "הסיסמה עודכנה בהצלחה" });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ message: "שגיאת שרת", error: error.message });
   }
 });
 

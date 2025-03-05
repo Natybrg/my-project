@@ -9,7 +9,25 @@ export const login = async (phone, password) => {
     const response = await api.post('/auth/login', { phone, password });
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    console.error('Login error:', error);
+    if (error.response) {
+      // The server responded with a status code outside the 2xx range
+      if (error.response.data && error.response.data.errors) {
+        // If the server returned an array of errors, join them into a single message
+        throw new Error(error.response.data.errors.join(', '));
+      } else if (error.response.data && error.response.data.message) {
+        // If the server returned a specific error message
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error('שגיאה בהתחברות. אנא נסה שנית.');
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      throw new Error('לא התקבלה תגובה מהשרת. אנא בדוק את החיבור לאינטרנט.');
+    } else {
+      // Something happened in setting up the request
+      throw new Error('שגיאה בשליחת הבקשה: ' + error.message);
+    }
   }
 };
 
