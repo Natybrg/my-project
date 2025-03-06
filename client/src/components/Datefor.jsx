@@ -17,13 +17,17 @@ function JewishCalendar({ isSidePanelOpen, onCloseSidePanel }) {
         },
         eventDisplay: 'block',
         events: {
-          url: "https://www.hebcal.com/hebcal?cfg=fc&v=1&i=off&maj=on&min=on&nx=on&mf=on&ss=on&mod=on&lg=s&s=on",
+          url: "https://www.hebcal.com/hebcal?cfg=fc&v=1&i=off&maj=on&min=on&nx=on&mf=on&ss=on&mod=on&lg=h&s=on",
           cache: true
         },
         height: '650px',
         contentHeight: '700px',
         aspectRatio: 1.5,
         direction: 'rtl',
+        locale: 'he',
+        buttonText: {
+          today: 'היום'
+        },
         dateClick: (info) => {
           setSelectedDate(info.dateStr);
           onCloseSidePanel(true);
@@ -51,7 +55,13 @@ function JewishCalendar({ isSidePanelOpen, onCloseSidePanel }) {
       script.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js';
       script.integrity = 'sha384-wv6yRjQC0TqzEnAjFQVXM2V0JrF6Nk0dh6QAGf1RwzTqPArdwU3luBZjVCi2YSVH';
       script.crossOrigin = 'anonymous';
-      script.onload = initCalendar;
+      script.onload = () => {
+        // Load Hebrew locale after FullCalendar is loaded
+        const localeScript = document.createElement('script');
+        localeScript.src = 'https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/he.js';
+        localeScript.onload = initCalendar;
+        document.head.appendChild(localeScript);
+      };
       document.head.appendChild(script);
     };
 
@@ -101,7 +111,7 @@ function JewishCalendar({ isSidePanelOpen, onCloseSidePanel }) {
             שעות היום בתאריך: {selectedDate}
           </h3>
           <button
-            onClick={() => handleCloseSidePanel(false)} // שינוי כאן!
+            onClick={() => handleCloseSidePanel(false)}
             style={{
               position: 'absolute',
               top: '10px',

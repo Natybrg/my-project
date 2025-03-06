@@ -109,9 +109,16 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
     });
   
     setErrors(newErrors);
+    
+    // Debug: Log form data before submission
+    console.log("Form data before submission:", formData);
+    console.log("Phone validation:", validateField('phone', formData.phone, true));
+    console.log("Password validation:", validateField('password', formData.password, true));
   
     if (!hasErrors) {
       try {
+        setGeneralError(""); // Clear any previous errors
+        console.log("Attempting login with:", { phone: formData.phone, password: formData.password });
         const data = await login(formData.phone, formData.password);
         localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.userId);
@@ -148,7 +155,17 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
         onClose();
         window.dispatchEvent(new Event('userChange'));
       } catch (error) {
-        setGeneralError(error.message);
+        console.error("Login error:", error);
+        
+        // Handle different types of error responses
+        if (error.message) {
+          setGeneralError(error.message);
+        } else {
+          setGeneralError("שגיאה בהתחברות. אנא נסה שנית.");
+        }
+        
+        // Log the error for debugging
+        console.error("Login failed:", error);
       }
     }
   };

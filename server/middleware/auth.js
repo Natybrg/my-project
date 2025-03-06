@@ -9,7 +9,7 @@ const auth = async (req, res, next) => {
     }
 
     // אימות הטוקן
-    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // הוספת המידע על המשתמש לבקשה
     req.user = { 
