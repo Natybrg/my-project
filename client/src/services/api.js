@@ -4,6 +4,31 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:3002',
 });
 
+// Add a request interceptor to add the token to each request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  return config;
+});
+
+// Add a response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.dispatchEvent(new Event('userChange'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const login = async (phone, password) => {
   try {
     const response = await api.post('/auth/login', { phone, password });
@@ -131,27 +156,5 @@ export const createAliya = async (userId, aliyaData) => {
     throw error.response ? error.response.data : error;
   }
 };
-
-// Request interceptor - הוספת טוקן לכל בקשה
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor - טיפול בשגיאות אימות
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.dispatchEvent(new Event('userChange'));
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default api;

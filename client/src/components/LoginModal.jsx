@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  Box,
-  Typography,
-  TextField,
-  Button,
-} from "@mui/material";
+import { Modal, Box, Typography, TextField, Button } from "@mui/material";
 import { login, getUserDetails } from "../services/api";
 
 const style = {
@@ -21,7 +15,7 @@ const style = {
   boxShadow: 24,
   p: 4,
   direction: "rtl",
-  borderRadius: 2
+  borderRadius: 2,
 };
 
 const LoginModal = ({ open, onClose, onSignupClick }) => {
@@ -32,24 +26,22 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
 
   const [touched, setTouched] = useState({
     phone: false,
-    password: false
+    password: false,
   });
 
   const [errors, setErrors] = useState({
     phone: "",
-    password: ""
+    password: "",
   });
 
   const [generalError, setGeneralError] = useState("");
 
-  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       resetForm();
     }
   }, [open]);
 
-  // Reset form function
   const resetForm = () => {
     setFormData({
       phone: "",
@@ -57,120 +49,109 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
     });
     setTouched({
       phone: false,
-      password: false
+      password: false,
     });
     setErrors({
       phone: "",
-      password: ""
+      password: "",
     });
     setGeneralError("");
   };
 
   const validateField = (name, value, isSubmitting = false) => {
-    if (!isSubmitting && !touched[name] && !value) return '';
+    if (!isSubmitting && !touched[name] && !value) return "";
 
     switch (name) {
-      case 'phone':
-        return (!value || !/^\d{10}$/.test(value)) ? 
-          'מספר טלפון חייב להכיל בדיוק 10 ספרות' : '';
-      case 'password':
-        return (!value || value.length < 6) ? 
-          'סיסמה חייבת להכיל לפחות 6 תווים' : '';
+      case "phone":
+        return !/^\d{10}$/.test(value)
+          ? "מספר טלפון חייב להכיל בדיוק 10 ספרות"
+          : "";
+      case "password":
+        return value.length < 6
+          ? "סיסמה חייבת להכיל לפחות 6 תווים"
+          : "";
       default:
-        return '';
+        return "";
     }
   };
 
   const handleChange = (name, value) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setTouched(prev => ({ ...prev, [name]: true }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+
     const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     setTouched({
       phone: true,
-      password: true
+      password: true,
     });
-  
+
     const newErrors = {};
     let hasErrors = false;
-  
-    Object.keys(formData).forEach(field => {
+
+    Object.keys(formData).forEach((field) => {
       const error = validateField(field, formData[field], true);
       if (error) {
         newErrors[field] = error;
         hasErrors = true;
       }
     });
-  
+
     setErrors(newErrors);
-    
-    // Debug: Log form data before submission
-    console.log("Form data before submission:", formData);
-    console.log("Phone validation:", validateField('phone', formData.phone, true));
-    console.log("Password validation:", validateField('password', formData.password, true));
-  
+
     if (!hasErrors) {
       try {
         setGeneralError(""); // Clear any previous errors
-        console.log("Attempting login with:", { phone: formData.phone, password: formData.password });
         const data = await login(formData.phone, formData.password);
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.userId);
-        
-        // שמירת שם המשתמש אם קיים בתגובה
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.userId);
+
         if (data.firstName) {
-          localStorage.setItem('firstName', data.firstName);
-        } 
-        // אם אין שם משתמש בתגובה, נסה לקבל אותו בבקשה נפרדת
-        else {
+          localStorage.setItem("firstName", data.firstName);
+        } else {
           try {
             const userDetails = await getUserDetails(data.userId);
             if (userDetails && userDetails.firstName) {
-              localStorage.setItem('firstName', userDetails.firstName);
+              localStorage.setItem("firstName", userDetails.firstName);
             }
           } catch (detailsError) {
-            console.error('שגיאה בקבלת פרטי משתמש:', detailsError);
-            // לא נציג שגיאה למשתמש כי ההתחברות כבר הצליחה
+            console.error(
+              "שגיאה בקבלת פרטי משתמש:",
+              detailsError
+            );
           }
         }
-        
-        // שמירת תפקיד המשתמש
+
         if (data.role) {
-          localStorage.setItem('userRole', data.role);
+          localStorage.setItem("userRole", data.role);
         } else if (data.rol) {
-          // תמיכה גם ב-rol לצורך תאימות לאחור
-          localStorage.setItem('userRole', data.rol);
+          localStorage.setItem("userRole", data.rol);
         }
-        
-        // הדפסת מידע ללוג (בסביבת פיתוח בלבד)
+
         console.log("Login successful with role:", data.role || data.rol);
-        
+
         resetForm(); // Reset form after successful login
         onClose();
-        window.dispatchEvent(new Event('userChange'));
+        window.dispatchEvent(new Event("userChange"));
       } catch (error) {
         console.error("Login error:", error);
-        
-        // Handle different types of error responses
+
         if (error.message) {
           setGeneralError(error.message);
         } else {
           setGeneralError("שגיאה בהתחברות. אנא נסה שנית.");
         }
-        
-        // Log the error for debugging
+
         console.error("Login failed:", error);
       }
     }
   };
 
-  // Handle signup click with form reset
   const handleSignupClick = () => {
     resetForm();
     onSignupClick();
@@ -183,7 +164,7 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
           התחברות
         </Typography>
 
-        {generalError && ( // הצגת הודעת שגיאה כללית
+        {generalError && (
           <Typography color="error" variant="body2" mb={2}>
             {generalError}
           </Typography>
@@ -197,7 +178,7 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
             variant="outlined"
             margin="normal"
             value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
+            onChange={(e) => handleChange("phone", e.target.value)}
             error={!!errors.phone}
             helperText={errors.phone}
             autoComplete="tel"
@@ -211,7 +192,7 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
             variant="outlined"
             margin="normal"
             value={formData.password}
-            onChange={(e) => handleChange('password', e.target.value)}
+            onChange={(e) => handleChange("password", e.target.value)}
             error={!!errors.password}
             helperText={errors.password}
             autoComplete="current-password"
@@ -225,7 +206,7 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
             fullWidth
             variant="text"
             sx={{ mt: 1 }}
-            onClick={handleSignupClick} // Changed to use the new handler
+            onClick={handleSignupClick}
           >
             אין לך חשבון? הירשם כאן
           </Button>
@@ -236,3 +217,4 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
 };
 
 export default LoginModal;
+
