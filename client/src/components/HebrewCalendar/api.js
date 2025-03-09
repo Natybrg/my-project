@@ -1,0 +1,85 @@
+import axios from 'axios';
+import { formatDateKey, formatTime } from './utils';
+
+// פונקציה לקריאה ל-API של Hebcal לקבלת תאריכים עבריים וחגים
+export const fetchHebrewDates = async (dates) => {
+  try {
+    const hebrewDatesData = {};
+    for (const date of dates) {
+      const formattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      const response = await axios.get(`https://www.hebcal.com/converter`, {
+        params: {
+          cfg: 'json',
+          date: formattedDate,
+          g2h: 1,
+        },
+      });
+      if (response.data && response.data.hebrew) {
+        hebrewDatesData[formattedDate] = response.data.hebrew;
+      } else {
+        console.warn(`No Hebrew date found for ${formattedDate}`);
+      }
+    }
+    return hebrewDatesData;
+  } catch (error) {
+    console.error('Error fetching Hebrew dates:', error);
+    throw error;
+  }
+};
+
+// פונקציה לקבלת זמני היום מ-API
+export const fetchDayTimes = async (date) => {
+  try {
+    const formattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const response = await axios.get(`https://www.hebcal.com/zmanim`, {
+      params: {
+        cfg: 'json',
+        latitude: 31.7683, // Latitude for Jerusalem
+        longitude: 35.2137, // Longitude for Jerusalem
+        date: formattedDate,
+      },
+    });
+
+    if (response.data && response.data.times) {
+      const rawTimes = response.data.times;
+
+      // Filter only the required times
+      const timeLabels = {
+        alotHaShachar: 'עלות השחר',
+        misheyakir: 'משיכיר',
+        sunrise: 'נץ החמה',
+        sofZmanShma: 'סוף זמן קריאת שמע',
+        minchaGedola: 'מנחה גדולה',
+        sofZmanTfilla: 'סוף זמן תפילה',
+        chatzot: 'חצות היום',
+        sunset: 'שקיעה',
+        tzeit7083deg: 'צאת הכוכבים',
+      };
+
+      const formattedTimes = Object.entries(rawTimes).reduce((acc, [key, value]) => {
+        if (timeLabels[key]) {
+          acc[timeLabels[key]] = formatTime(value); // Format the time
+        }
+        return acc;
+      }, {});
+
+      // Add Candle Lighting and Havdalah times at the top of the list
+      const specialTimes = {};
+      if (rawTimes.candle_lighting) {
+        specialTimes['הדלקת נרות'] = formatTime(rawTimes.candle_lighting);
+      }
+      if (rawTimes.havdalah) {
+        specialTimes['הבדלה'] = formatTime(rawTimes.havdalah);
+      }
+
+      // Merge special times at the top of the list
+      return { ...specialTimes, ...formattedTimes };
+    } else {
+      console.warn(`No times found for ${formattedDate}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching day times:', error);
+    throw error;
+  }
+};
