@@ -62,7 +62,7 @@ router.get('/:userId/aliyot', auth, async (req, res) => {
       const token = authHeader.split(' ')[1];
       let decoded;
       try {
-        decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
       } catch (jwtErr) {
         return res.status(401).json({ message: 'טוקן לא חוקי' });
       }

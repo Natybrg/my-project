@@ -43,7 +43,7 @@ app.get('/debug/routes', (req, res) => {
 });
 
 // MongoDB Connection
-const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://israel:12345654321@cluster0.htxff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://israel:12345654321@cluster0.htxff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 console.log('Connecting to MongoDB...');
 
 mongoose.connect(mongoURI)

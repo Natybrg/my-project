@@ -97,6 +97,7 @@ router.post("/register", validateRegistration, async (req, res) => {
       res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 // Login route
 router.post("/login", validateLogin, async (req, res) => {
   try {
@@ -148,6 +149,7 @@ router.post("/login", validateLogin, async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 // Get all users route
 router.get("/users", async (req, res) => {
   try {
