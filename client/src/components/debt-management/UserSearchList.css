@@ -1,0 +1,129 @@
+.user-search-paper {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.user-search-paper:hover {
+  box-shadow: 0 8px 30px rgba(25, 118, 210, 0.15) !important;
+}
+
+.user-list {
+  padding: 0;
+}
+
+.user-list-item {
+  transition: all 0.3s ease;
+}
+
+.user-list-button {
+  padding: 12px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.user-list-button:hover {
+  background-color: rgba(25, 118, 210, 0.04) !important;
+}
+
+.user-avatar {
+  background-color: #1976d2 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+}
+
+.user-list-button:hover .user-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.user-name {
+  font-weight: 600 !important;
+  color: #1a3b6e !important;
+  margin-bottom: 4px !important;
+}
+
+.user-details {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.user-phone-chip {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+  border-color: rgba(25, 118, 210, 0.2) !important;
+  color: #1976d2 !important;
+  font-size: 0.75rem !important;
+  height: 24px !important;
+  transition: all 0.3s ease;
+}
+
+.user-phone-chip:hover {
+  background-color: rgba(25, 118, 210, 0.12) !important;
+  transform: translateY(-2px);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.loading-text {
+  color: rgba(0, 0, 0, 0.6) !important;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.empty-list-item {
+  padding: 40px 16px !important;
+}
+
+/* Animation for list items */
+.user-list-item {
+  animation: fadeIn 0.5s ease-in-out;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered animation for list items */
+.user-list-item:nth-child(1) { animation-delay: 0.05s; }
+.user-list-item:nth-child(3) { animation-delay: 0.1s; }
+.user-list-item:nth-child(5) { animation-delay: 0.15s; }
+.user-list-item:nth-child(7) { animation-delay: 0.2s; }
+.user-list-item:nth-child(9) { animation-delay: 0.25s; }
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .user-list-button {
+    padding: 10px 12px !important;
+  }
+  
+  .user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .user-name {
+    font-size: 0.9rem !important;
+  }
+}

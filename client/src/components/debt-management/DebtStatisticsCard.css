@@ -1,0 +1,115 @@
+.statistics-card {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 24px !important;
+}
+
+.statistics-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-title {
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+  margin-bottom: 16px !important;
+  color: #333;
+}
+
+.divider {
+  margin-bottom: 20px !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.stat-box {
+  padding: 16px;
+  border-radius: 10px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-box:hover {
+  transform: scale(1.05);
+}
+
+.aliyot-box {
+  background-color: #bbdefb;
+  color: #0d47a1;
+}
+
+.total-box {
+  background-color: #e1bee7;
+  color: #6a1b9a;
+}
+
+.paid-box {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.unpaid-box {
+  background-color: #ffcdd2;
+  color: #c62828;
+}
+
+.stat-label {
+  font-size: 0.875rem !important;
+  margin-bottom: 8px !important;
+  font-weight: 500 !important;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.progress-container {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progress-bar-container {
+  height: 12px;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s ease-in-out;
+}
+
+.chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .stat-box {
+    padding: 12px;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem !important;
+  }
+}

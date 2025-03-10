@@ -6,7 +6,6 @@ import {
   Button, 
   IconButton,
   Box,
-  Chip,
   Menu,
   MenuItem,
   Avatar
@@ -15,6 +14,8 @@ import { AccountCircle, Home, Payment, Settings, Dashboard } from '@mui/icons-ma
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
+
+// Remove unused imports (Settings was imported but not used)
 
 const CustomAppBar = () => {
   const navigate = useNavigate();
@@ -40,17 +41,24 @@ const CustomAppBar = () => {
 
   // פונקציה לבדיקה אם המשתמש מחובר
   const checkUserLoggedIn = () => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    const firstName = localStorage.getItem('firstName');
-    const userRole = localStorage.getItem('userRole');
-    
-    if (token && userId) {
-      setIsLoggedIn(true);
-      setUserName(firstName || 'משתמש');
-      // Check for all possible admin roles
-      setIsAdmin(['admin', 'gabai', 'manager'].includes(userRole));
-    } else {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const firstName = localStorage.getItem('firstName');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (token && userId) {
+        setIsLoggedIn(true);
+        setUserName(firstName || 'משתמש');
+        // Check for all possible admin roles
+        setIsAdmin(['admin', 'gabai', 'manager'].includes(userRole));
+      } else {
+        setIsLoggedIn(false);
+        setUserName('אורח');
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      console.error('Error checking user login status:', error);
       setIsLoggedIn(false);
       setUserName('אורח');
       setIsAdmin(false);

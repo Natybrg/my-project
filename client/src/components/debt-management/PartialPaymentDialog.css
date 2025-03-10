@@ -1,0 +1,120 @@
+.partial-payment-dialog .MuiPaper-root {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dialog-title {
+  background-color: #f5f7fa;
+  padding: 16px 24px !important;
+}
+
+.debt-summary-paper {
+  margin: 0 0 24px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.debt-info-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.debt-info-item {
+  flex: 1;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.debt-info-label {
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px !important;
+  font-size: 0.85rem !important;
+}
+
+.debt-info-value {
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+}
+
+.total-amount {
+  color: #1a3b6e;
+}
+
+.paid-amount {
+  color: #2e7d32;
+}
+
+.remaining-amount {
+  color: #c62828;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.amount-input .MuiInputBase-root {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.amount-input .MuiInputBase-root:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+.amount-input .MuiInputBase-root.Mui-focused {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.note-input .MuiInputBase-root {
+  border-radius: 8px;
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  background-color: #f5f7fa;
+}
+
+.cancel-button {
+  border-radius: 8px !important;
+  padding: 6px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.cancel-button:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.save-button {
+  border-radius: 8px !important;
+  padding: 6px 16px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.save-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+@media (max-width: 600px) {
+  .debt-info-container {
+    flex-direction: column;
+  }
+  
+  .debt-info-item {
+    padding: 12px;
+  }
+  
+  .MuiDialogContent-root {
+    padding: 16px !important;
+  }
+}

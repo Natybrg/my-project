@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_URL = 'http://127.0.0.1:3002';
 
 // Get all debts for a user
 export const getUserDebts = async (userId) => {
