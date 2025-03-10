@@ -6,89 +6,70 @@ import {
   CardActionArea, 
   Typography, 
   Box, 
-  Grid 
+  Grid,
+  Badge
 } from '@mui/material';
+import { Notifications } from '@mui/icons-material';
 import { formatDateKey, getHebrewDayName } from './utils';
 
-const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect }) => {
-  return (
-    <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-      {/* Day Labels */}
-      <Grid container spacing={1} sx={{ mb: 2 }}>
-        {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map((day, index) => (
-          <Grid item xs={12 / 7} key={index}>
-            <Typography
-              variant="body2"
-              sx={{
-                textAlign: 'center',
-                fontWeight: 'bold',
-                color: 'text.secondary',
-              }}
-            >
-              {day}
-            </Typography>
-          </Grid>
-        ))}
-      </Grid>
+const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, reminders }) => {
+  // פונקציה לבדיקה אם יש תזכורות ביום מסוים
+  const hasRemindersForDay = (date) => {
+    const dateKey = formatDateKey(date);
+    return reminders.some(reminder => formatDateKey(new Date(reminder.date)) === dateKey);
+  };
 
-      {/* Calendar Grid */}
+  return (
+    <Paper elevation={3} sx={{ p: 2 }}>
       <Grid container spacing={1}>
         {weekDates.map((date) => {
-          const isSelected = selectedDay && date.toDateString() === selectedDay.toDateString();
-          const hebrewDate = hebrewDates[formatDateKey(date)] || '';
-          const holiday = holidays[formatDateKey(date)] || '';
-
+          const dateKey = formatDateKey(date);
+          const isSelected = formatDateKey(selectedDay) === dateKey;
+          const isToday = formatDateKey(new Date()) === dateKey;
+          const hebrewDate = hebrewDates[dateKey];
+          const holiday = holidays[dateKey];
+          const hasReminders = hasRemindersForDay(date);
+          
           return (
-            <Grid item xs={12 / 7} key={date.toISOString()}>
-              <Card
+            <Grid item xs={12} sm={6} md={3} lg={12/7} key={dateKey}>
+              <Card 
+                elevation={isSelected ? 6 : 1}
                 sx={{
-                  backgroundColor: isSelected ? 'primary.light' : 'background.paper',
-                  border: isSelected ? '2px solid' : '1px solid',
-                  borderColor: isSelected ? 'primary.main' : 'divider',
-                  borderRadius: 1,
-                  cursor: 'pointer',
-                  height: '100px', // Fixed height for uniformity
+                  border: isToday ? '2px solid #3f51b5' : 'none',
+                  backgroundColor: isSelected ? 'rgba(63, 81, 181, 0.08)' : 'white'
                 }}
-                onClick={() => onDaySelect(date)}
               >
-                <CardActionArea sx={{ height: '100%' }}>
-                  <CardContent
-                    sx={{
-                      padding: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontSize: '0.9rem',
-                        fontWeight: isSelected ? 'bold' : 'normal',
-                        textAlign: 'center',
-                      }}
-                    >
+                <CardActionArea onClick={() => onDaySelect(date)}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="subtitle1" component="div">
+                        {getHebrewDayName(date.getDay())}
+                      </Typography>
+                      {hasReminders && (
+                        <Badge color="secondary" variant="dot">
+                          <Notifications fontSize="small" />
+                        </Badge>
+                      )}
+                    </Box>
+                    
+                    <Typography variant="h5" component="div" sx={{ textAlign: 'center', my: 1 }}>
                       {date.getDate()}
                     </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '0.75rem',
-                        textAlign: 'center',
-                        color: holiday ? 'error.main' : 'text.secondary',
-                      }}
-                    >
-                      {hebrewDate}
-                    </Typography>
+                    
+                    {hebrewDate && (
+                      <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                        {hebrewDate}
+                      </Typography>
+                    )}
+                    
                     {holiday && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: '0.75rem',
-                          textAlign: 'center',
-                          color: 'error.main',
+                      <Typography 
+                        variant="body2" 
+                        color="primary" 
+                        sx={{ 
+                          textAlign: 'center', 
+                          mt: 1,
+                          fontWeight: 'bold'
                         }}
                       >
                         {holiday}

@@ -4,23 +4,33 @@ import { formatDateKey, formatTime } from './utils';
 // פונקציה לקריאה ל-API של Hebcal לקבלת תאריכים עבריים וחגים
 export const fetchHebrewDates = async (dates) => {
   try {
-    const hebrewDatesData = {};
+    const hebrewDates = {};
+    const holidays = {};
+    
     for (const date of dates) {
-      const formattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      const dateKey = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
       const response = await axios.get(`https://www.hebcal.com/converter`, {
         params: {
           cfg: 'json',
-          date: formattedDate,
+          date: dateKey,
           g2h: 1,
         },
       });
+      
       if (response.data && response.data.hebrew) {
-        hebrewDatesData[formattedDate] = response.data.hebrew;
+        hebrewDates[dateKey] = response.data.hebrew;
+        
+        // Check if there's a holiday
+        if (response.data.events && response.data.events.length > 0) {
+          holidays[dateKey] = response.data.events[0];
+        }
       } else {
-        console.warn(`No Hebrew date found for ${formattedDate}`);
+        console.warn(`No Hebrew date found for ${dateKey}`);
+        hebrewDates[dateKey] = '';
       }
     }
-    return hebrewDatesData;
+    
+    return { hebrewDates, holidays };
   } catch (error) {
     console.error('Error fetching Hebrew dates:', error);
     throw error;

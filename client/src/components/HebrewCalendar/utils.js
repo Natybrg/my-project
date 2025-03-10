@@ -8,10 +8,41 @@ export const getHebrewDayName = (dayIndex) => {
   return hebrewDays[dayIndex];
 };
 
+// פונקציה לחישוב תחילת השבוע (יום ראשון)
+export const getStartOfWeek = (date) => {
+  const result = new Date(date);
+  const day = result.getDay();
+  
+  // חישוב ההפרש בימים מיום ראשון
+  const diff = result.getDate() - day;
+  result.setDate(diff);
+  
+  // איפוס שעות, דקות, שניות ומילישניות
+  result.setHours(0, 0, 0, 0);
+  
+  return result;
+};
+
+// פונקציה לפורמט שעה מספרית (מ-API)
+export const formatNumericTime = (timeStr) => {
+  if (!timeStr) return '';
+  
+  // אם השעה כבר בפורמט הנכון, החזר אותה כמו שהיא
+  if (timeStr.includes(':')) return timeStr;
+  
+  // המרת פורמט שעה מ-API
+  const hours = Math.floor(timeStr);
+  const minutes = Math.round((timeStr - hours) * 60);
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+// פונקציה לפורמט תאריך גרגוריאני
 export const formatGregorianDate = (date) => {
   return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
 };
 
+// פונקציה לפורמט שעה מתאריך
 export const formatTime = (timeString) => {
   if (!timeString) return 'N/A';
   try {

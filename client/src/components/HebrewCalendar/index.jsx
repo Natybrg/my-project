@@ -5,188 +5,250 @@ import {
   Container, 
   IconButton,
   CircularProgress,
-  Grid
+  Grid,
+  Button,
+  Fab
 } from '@mui/material';
-import { ChevronRight, ChevronLeft } from '@mui/icons-material';
+import { ChevronRight, ChevronLeft, Add } from '@mui/icons-material';
 import WeekView from './WeekView';
 import DayTimes from './DayTimes';
+import Reminders from './Reminders';
+import ReminderForm from './ReminderForm';
+import CalendarHeader from './CalendarHeader';
 import { fetchHebrewDates, fetchDayTimes } from './api';
-import { formatDateKey } from './utils';
+import { formatDateKey, getStartOfWeek } from './utils';
+import { getRemindersByDateRange } from '../../services/reminderService';
+
+// Change to named import
+import { jwtDecode } from 'jwt-decode';
 
 const HebrewCalendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date());
   const [weekDates, setWeekDates] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(new Date()); // Default to today's date
-  const [dayTimes, setDayTimes] = useState(null);
-  const [hebrewDates, setHebrewDates] = useState({});
+  const [hebrewDates, setHebrewDates] = useState(() => {
+    const initialDates = {};
+    const today = new Date();
+    for (let i = -7; i < 14; i++) { // Pre-initialize 3 weeks
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      initialDates[formatDateKey(date)] = {};
+    }
+    return initialDates;
+  });
   const [holidays, setHolidays] = useState({});
+  const [dayTimes, setDayTimes] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [reminders, setReminders] = useState([]);
+  const [isManager, setIsManager] = useState(false);
+  const [reminderFormOpen, setReminderFormOpen] = useState(false);
 
-  // Calculate the current week's dates
+  // בדיקת הרשאות משתמש
   useEffect(() => {
-    const calculateWeekDates = () => {
-      const dates = [];
-      const firstDayOfWeek = new Date(currentDate);
-      const day = currentDate.getDay();
-      firstDayOfWeek.setDate(currentDate.getDate() - day);
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(firstDayOfWeek);
-        date.setDate(firstDayOfWeek.getDate() + i);
-        dates.push(date);
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        // בדיקה אם המשתמש הוא מנהל או אדמין
+        setIsManager(['admin', 'manager'].includes(decoded.role));
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setIsManager(false);
       }
+    }
+  }, []);
 
-      setWeekDates(dates);
-      loadHebrewDates(dates);
+  // חישוב תאריכי השבוע
+  useEffect(() => {
+    const startOfWeek = getStartOfWeek(selectedDay);
+    const dates = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(date.getDate() + i);
+      dates.push(date);
+    }
+    
+    setWeekDates(dates);
+  }, [selectedDay]);
 
-      // Automatically select today's date and fetch its times
-      const today = new Date();
-      const isTodayInWeek = dates.some(
-        (date) =>
-          date.getDate() === today.getDate() &&
-          date.getMonth() === today.getMonth() &&
-          date.getFullYear() === today.getFullYear()
-      );
-      if (isTodayInWeek) {
-        setSelectedDay(today);
-        handleDaySelect(today);
-      } else {
-        setSelectedDay(dates[0]); // Default to the first day of the week
-        handleDaySelect(dates[0]);
+  // טעינת תאריכים עבריים וחגים
+  useEffect(() => {
+    if (weekDates.length > 0) {
+      setLoading(true);
+      
+      const fetchData = async () => {
+        try {
+          // Rename the destructured variables to avoid shadowing state variables
+          const { hebrewDates: fetchedHebrewDates, holidays: fetchedHolidays } = await fetchHebrewDates(weekDates);
+          
+          // Debug logs to verify the data structure
+          console.log("Fetched Hebrew Dates:", fetchedHebrewDates);
+          console.log("Fetched Holidays:", fetchedHolidays);
+          
+          // Update state with fetched data
+          setHebrewDates(fetchedHebrewDates || {});
+          setHolidays(fetchedHolidays || {});
+          
+          // Initialize dayTimes with default values for each date in weekDates
+          const initialDayTimes = {};
+          weekDates.forEach(date => {
+            const dateKey = formatDateKey(date);
+            initialDayTimes[dateKey] = dayTimes[dateKey] || {}; // Use existing data if available
+          });
+          setDayTimes(initialDayTimes);
+      
+          // Fetch day times for the selected day
+          const dayTimesData = await fetchDayTimes(selectedDay);
+          setDayTimes(prev => ({
+            ...prev,
+            [formatDateKey(selectedDay)]: dayTimesData
+          }));
+          
+          // Fetch reminders for the current week
+          const startDate = weekDates[0];
+          const endDate = weekDates[6];
+          const remindersData = await getRemindersByDateRange(startDate, endDate);
+          setReminders(remindersData);
+          
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching calendar data:', error);
+          setLoading(false);
+        }
+      };
+      
+      fetchData();
+    }
+  }, [weekDates]);
+
+  // Add debug logs before rendering
+  useEffect(() => {
+    console.log("Before render - Selected Day:", selectedDay);
+    console.log("Before render - Selected Day Key:", formatDateKey(selectedDay));
+    console.log("Before render - Hebrew Dates for selected day:", hebrewDates[formatDateKey(selectedDay)]);
+    console.log("Before render - Day Times for selected day:", dayTimes[formatDateKey(selectedDay)]);
+  }, [selectedDay, hebrewDates, dayTimes]);
+
+  // טעינת זמני היום כאשר היום הנבחר משתנה
+  useEffect(() => {
+    const fetchDayTimesForSelectedDay = async () => {
+      const dateKey = formatDateKey(selectedDay);
+      
+      if (!dayTimes[dateKey]) {
+        try {
+          const dayTimesData = await fetchDayTimes(selectedDay);
+          setDayTimes(prev => ({
+            ...prev,
+            [dateKey]: dayTimesData
+          }));
+        } catch (error) {
+          console.error('Error fetching day times:', error);
+        }
       }
     };
+    
+    fetchDayTimesForSelectedDay();
+  }, [selectedDay]);
 
-    calculateWeekDates();
-  }, [currentDate]);
-
-  // Load Hebrew dates and holidays
-  const loadHebrewDates = async (dates) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const hebrewDatesData = await fetchHebrewDates(dates);
-      setHebrewDates(hebrewDatesData);
-    } catch (error) {
-      console.error('Failed to load Hebrew dates:', error);
-      setError('Failed to load Hebrew dates. Please try again later.');
-      setHebrewDates({});
-    } finally {
-      setLoading(false);
-    }
+  const handlePrevWeek = () => {
+    const newDate = new Date(selectedDay);
+    newDate.setDate(newDate.getDate() - 7);
+    setSelectedDay(newDate);
   };
 
-  // Handle day selection and fetch day times
-  const handleDaySelect = async (date) => {
+  const handleNextWeek = () => {
+    const newDate = new Date(selectedDay);
+    newDate.setDate(newDate.getDate() + 7);
+    setSelectedDay(newDate);
+  };
+
+  const handleDaySelect = (date) => {
     setSelectedDay(date);
-    setDayTimes(null);
+  };
+
+  // פונקציה לרענון התזכורות לאחר הוספה/עדכון/מחיקה
+  const refreshReminders = async () => {
     try {
-      const times = await fetchDayTimes(date);
-      setDayTimes(times);
+      const startDate = weekDates[0];
+      const endDate = weekDates[6];
+      const remindersData = await getRemindersByDateRange(startDate, endDate);
+      setReminders(remindersData);
     } catch (error) {
-      console.error('Failed to load day times:', error);
-      setError('Failed to load day times. Please try again later.');
-      setDayTimes(null);
+      console.error('Error refreshing reminders:', error);
     }
   };
 
-  // Navigate to the next week
-  const nextWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + 7);
-    setCurrentDate(newDate);
-
-    // Retain the selected date if it exists in the new week
-    const newWeekDates = weekDates.map((date) => {
-      const newDate = new Date(date);
-      newDate.setDate(date.getDate() + 7);
-      return newDate;
-    });
-    const isSelectedDayInNewWeek = newWeekDates.some(
-      (date) =>
-        date.getDate() === selectedDay.getDate() &&
-        date.getMonth() === selectedDay.getMonth() &&
-        date.getFullYear() === selectedDay.getFullYear()
-    );
-    if (!isSelectedDayInNewWeek) {
-      setSelectedDay(newWeekDates[0]); // Default to the first day of the new week
-      handleDaySelect(newWeekDates[0]);
-    }
+  // פתיחת טופס הוספת תזכורת
+  const handleAddReminder = () => {
+    setReminderFormOpen(true);
   };
 
-  // Navigate to the previous week
-  const prevWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() - 7);
-    setCurrentDate(newDate);
-
-    // Retain the selected date if it exists in the new week
-    const newWeekDates = weekDates.map((date) => {
-      const newDate = new Date(date);
-      newDate.setDate(date.getDate() - 7);
-      return newDate;
-    });
-    const isSelectedDayInNewWeek = newWeekDates.some(
-      (date) =>
-        date.getDate() === selectedDay.getDate() &&
-        date.getMonth() === selectedDay.getMonth() &&
-        date.getFullYear() === selectedDay.getFullYear()
-    );
-    if (!isSelectedDayInNewWeek) {
-      setSelectedDay(newWeekDates[0]); // Default to the first day of the new week
-      handleDaySelect(newWeekDates[0]);
-    }
+  // סגירת טופס תזכורת
+  const handleCloseReminderForm = () => {
+    setReminderFormOpen(false);
   };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4, direction: 'rtl' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          לוח שנה עברי
-        </Typography>
-        <Box>
-          <IconButton onClick={prevWeek} aria-label="שבוע קודם">
-            <ChevronRight />
-          </IconButton>
-          <IconButton onClick={nextWeek} aria-label="שבוע הבא">
-            <ChevronLeft />
-          </IconButton>
-        </Box>
-      </Box>
-
+      <CalendarHeader onPrevWeek={handlePrevWeek} onNextWeek={handleNextWeek} />
+      
       {loading ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            טוען נתונים...
-          </Typography>
-        </Box>
-      ) : error ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-          <Typography variant="body1" color="error">
-            {error}
-          </Typography>
         </Box>
       ) : (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={7}>
+        <Grid container spacing={3}>
+          {/* תצוגת שבוע - תופס את כל הרוחב */}
+          <Grid item xs={12}>
             <WeekView 
               weekDates={weekDates} 
               selectedDay={selectedDay} 
-              hebrewDates={hebrewDates}
-              holidays={holidays}
+              hebrewDates={hebrewDates || {}}
+              holidays={holidays || {}}
               onDaySelect={handleDaySelect}
+              reminders={reminders}
             />
           </Grid>
-          <Grid item xs={12} md={5}>
-            <DayTimes 
+          
+          {/* שורה חדשה עם שני טורים */}
+          <Grid item xs={12} md={6}>
+            {dayTimes[formatDateKey(selectedDay)] && (
+              <DayTimes 
+                selectedDay={selectedDay} 
+                dayTimes={dayTimes[formatDateKey(selectedDay)]} 
+                hebrewDate={hebrewDates[formatDateKey(selectedDay)] || {}} 
+              />
+            )}
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Reminders 
+              reminders={reminders} 
               selectedDay={selectedDay} 
-              dayTimes={dayTimes} 
-              hebrewDate={selectedDay ? hebrewDates[formatDateKey(selectedDay)] : ''}
             />
           </Grid>
         </Grid>
       )}
+      
+      {/* כפתור הוספת תזכורת למנהלים בלבד */}
+      {isManager && (
+        <Fab 
+          color="primary" 
+          aria-label="add reminder"
+          onClick={handleAddReminder}
+          sx={{ position: 'fixed', bottom: 16, left: 16 }}
+        >
+          <Add />
+        </Fab>
+      )}
+      
+      {/* טופס הוספת תזכורת */}
+      <ReminderForm 
+        open={reminderFormOpen}
+        onClose={handleCloseReminderForm}
+        selectedDate={selectedDay}
+        onSuccess={refreshReminders}
+      />
     </Container>
   );
 };

@@ -4,7 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const authRoutes = require('./routes/auth');
-const aliyotRoutes = require('./routes/aliyot'); // הוסף את השורה הזו
+const aliyotRoutes = require('./routes/aliyot');
+const reminderRoutes = require('./routes/reminders'); // הוספת נתיבי תזכורות
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '.env') });
@@ -16,7 +17,8 @@ app.use(express.json());
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/aliyot', aliyotRoutes); // וודא שזה מוגדר נכון
+app.use('/aliyot', aliyotRoutes);
+app.use('/reminders', reminderRoutes); // הוספת נתיבי תזכורות
 
 // הוסף נתיב לדיבוג
 app.get('/debug/routes', (req, res) => {
