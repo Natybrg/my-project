@@ -5,13 +5,18 @@ const api = axios.create({
 });
 
 // Add a request interceptor to add the token to each request
+// הוסף לוגים לבדיקת הטוקן בכל בקשה
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  console.log('Token being sent in request:', token ? 'Token exists' : 'No token');
+  
   if (token) {
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token}`,
     };
+    console.log('Authorization header:', `Bearer ${token}`);
   }
   return config;
 });

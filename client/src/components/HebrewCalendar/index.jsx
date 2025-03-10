@@ -225,6 +225,7 @@ const HebrewCalendar = () => {
             <Reminders 
               reminders={reminders} 
               selectedDay={selectedDay} 
+              onReminderUpdate={refreshReminders}
             />
           </Grid>
         </Grid>
