@@ -1,16 +1,12 @@
-import React, { useState } from "react";
-import HebrewCalendar from "../components/HebrewCalendar"; // עדכון הייבוא לרכיב החדש
+import React from "react";
 
 const HomePage = () => {
-    const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
-
-    const handleCloseSidePanel = (isOpen) => {
-      setIsSidePanelOpen(isOpen);
-    };
-
   return (
     <div>
-      <HebrewCalendar /> {/* החלפת הרכיב */}
+      <h1 style={{ textAlign: 'center', marginTop: '50px' }}>ברוכים הבאים לאתר בית הכנסת</h1>
+      <p style={{ textAlign: 'center', marginTop: '20px' }}>
+        כאן תוכלו למצוא מידע על זמני תפילה, אירועים קרובים ועוד.
+      </p>
     </div>
   );
 };

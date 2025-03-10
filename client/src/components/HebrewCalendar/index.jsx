@@ -81,10 +81,6 @@ const HebrewCalendar = () => {
           // Rename the destructured variables to avoid shadowing state variables
           const { hebrewDates: fetchedHebrewDates, holidays: fetchedHolidays } = await fetchHebrewDates(weekDates);
           
-          // Debug logs to verify the data structure
-          console.log("Fetched Hebrew Dates:", fetchedHebrewDates);
-          console.log("Fetched Holidays:", fetchedHolidays);
-          
           // Update state with fetched data
           setHebrewDates(fetchedHebrewDates || {});
           setHolidays(fetchedHolidays || {});
@@ -121,14 +117,8 @@ const HebrewCalendar = () => {
     }
   }, [weekDates]);
 
-  // Add debug logs before rendering
-  useEffect(() => {
-    console.log("Before render - Selected Day:", selectedDay);
-    console.log("Before render - Selected Day Key:", formatDateKey(selectedDay));
-    console.log("Before render - Hebrew Dates for selected day:", hebrewDates[formatDateKey(selectedDay)]);
-    console.log("Before render - Day Times for selected day:", dayTimes[formatDateKey(selectedDay)]);
-  }, [selectedDay, hebrewDates, dayTimes]);
-
+  // הסרת useEffect של לוגים לפני רינדור
+  
   // טעינת זמני היום כאשר היום הנבחר משתנה
   useEffect(() => {
     const fetchDayTimesForSelectedDay = async () => {

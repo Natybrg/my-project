@@ -5,18 +5,14 @@ const api = axios.create({
 });
 
 // Add a request interceptor to add the token to each request
-// הוסף לוגים לבדיקת הטוקן בכל בקשה
-
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  console.log('Token being sent in request:', token ? 'Token exists' : 'No token');
   
   if (token) {
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token}`,
     };
-    console.log('Authorization header:', `Bearer ${token}`);
   }
   return config;
 });
@@ -83,6 +79,7 @@ export const register = async (userData) => {
     }
   }
 };
+
 // Update payment status to fully paid
 export const updatePaymentStatus = async (paymentId, isPaid) => {
   try {
@@ -141,6 +138,7 @@ export const getAllUsers = async () => {
     throw error.response?.data || { message: 'אירעה שגיאה בקבלת רשימת משתמשים' };
   }
 };
+
 export const updateUser = async (userId, userData) => {
   try {
     const response = await api.put(`/auth/users/${userId}`, userData);

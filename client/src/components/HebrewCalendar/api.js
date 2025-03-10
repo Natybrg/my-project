@@ -34,6 +34,7 @@ export const fetchHebrewDates = async (dates) => {
           holidays[dateKey] = response.data.events[0].replace(/[\u0591-\u05C7]/g, '');
         }
       } else {
+        // שמירת לוג אזהרה במקרה שלא נמצא תאריך עברי
         console.warn(`No Hebrew date found for ${dateKey}`);
         hebrewDates[dateKey] = '';
       }
