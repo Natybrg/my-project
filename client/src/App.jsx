@@ -13,6 +13,7 @@ import DayTimesPage from './pages/DayTimesPage'; // ייבוא הדף החדש
 import theme from './theme';
 import cacheRtl from './cacheRtl';
 import './App.css';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -26,10 +27,10 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/about" element={<DataforShabat />} />
-              <Route path="/day-times" element={<DayTimesPage />} /> {/* הוספת הנתיב החדש */}
+              <Route path="/day-times" element={<DayTimesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               {/* דפי ניהול מוגנים - אם משתמש לא מורשה מנסה לגשת, הוא יועבר לדף הבית */}
               <Route path="/admin/*" element={<ProtectedRouteAdmin />} />
-              <Route path="/profile" element={<div>פרופיל</div>} />
             </Routes>
           </div>
         </BrowserRouter>

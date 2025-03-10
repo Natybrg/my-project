@@ -160,4 +160,37 @@ export const createAliya = async (userId, aliyaData) => {
   }
 };
 
+// Add these functions to your existing api.js file
+
+// Get user profile
+export const getUserProfile = async (userId) => {
+  try {
+    // Use the same endpoint as getUserDetails since that's likely the correct one
+    const response = await api.get(`/auth/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.error('Error in getUserProfile:', error);
+    if (error.response) {
+      throw error.response.data;
+    } else {
+      throw { message: 'אירעה שגיאה בקבלת פרטי הפרופיל' };
+    }
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (userId, profileData) => {
+  try {
+    // Update to use the same endpoint pattern as getUserProfile
+    const response = await api.put(`/auth/user/${userId}`, profileData);
+    return response;
+  } catch (error) {
+    if (error.response) {
+      throw error.response.data;
+    } else {
+      throw { message: 'אירעה שגיאה בעדכון הפרופיל' };
+    }
+  }
+};
+
 export default api;

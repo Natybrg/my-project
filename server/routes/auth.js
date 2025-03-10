@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require("../middleware/loginMiddelwares");
+const auth = require("../middleware/auth");
 
 const validateRegistration = (req, res, next) => {
   const { firstName, fatherName, lastName, phone, password } = req.body;
@@ -236,6 +237,66 @@ router.post("/reset-password", async (req, res) => {
   } catch (error) {
     console.error('Password reset error:', error);
     res.status(500).json({ message: "שגיאת שרת", error: error.message });
+  }
+});
+
+// Get user profile by ID
+router.get('/user/:userId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .select('-password'); // Exclude password from the response
+    
+    if (!user) {
+      return res.status(404).json({ message: 'משתמש לא נמצא' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'שגיאת שרת', error: error.message });
+  }
+});
+
+// Update user profile
+router.put('/user/:userId', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, phone, fatherName, password } = req.body;
+    
+    // Check if user exists
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'משתמש לא נמצא' });
+    }
+    
+    // Check permissions - only allow users to update their own profile or admins
+    if (req.user.id !== req.params.userId && req.user.rols !== 'admin') {
+      return res.status(403).json({ message: 'אין הרשאה לעדכן פרופיל של משתמש אחר' });
+    }
+    
+    // Prepare update data
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (phone) updateData.phone = phone;
+    if (fatherName) updateData.fatherName = fatherName;
+    
+    // Only update password if provided
+    if (password && password.trim() !== '') {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+    
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ message: 'שגיאת שרת', error: error.message });
   }
 });
 

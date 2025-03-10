@@ -8,7 +8,8 @@ import {
   Box,
   Menu,
   MenuItem,
-  Avatar
+  Avatar,
+  Chip // Added Chip import here
 } from '@mui/material';
 import { AccountCircle, Home, Payment, Settings, Dashboard, AccessTime } from '@mui/icons-material'; // הוספת אייקון AccessTime
 import { useNavigate, useLocation } from 'react-router-dom';
