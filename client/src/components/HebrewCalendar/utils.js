@@ -1,8 +1,13 @@
 // פונקציה לפורמט מפתח תאריך
 export const formatDateKey = (date) => {
-  return date.toISOString().split('T')[0];
+  // שימוש בתאריך מקומי במקום UTC כדי למנוע בעיות עם אזורי זמן
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
+// שאר הפונקציות נשארות ללא שינוי
 export const getHebrewDayName = (dayIndex) => {
   const hebrewDays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
   return hebrewDays[dayIndex];
@@ -11,14 +16,14 @@ export const getHebrewDayName = (dayIndex) => {
 // פונקציה לחישוב תחילת השבוע (יום ראשון)
 export const getStartOfWeek = (date) => {
   const result = new Date(date);
+  // קביעת השעה ל-0 לפני חישוב היום בשבוע
+  result.setHours(0, 0, 0, 0);
+  
   const day = result.getDay();
   
   // חישוב ההפרש בימים מיום ראשון
   const diff = result.getDate() - day;
   result.setDate(diff);
-  
-  // איפוס שעות, דקות, שניות ומילישניות
-  result.setHours(0, 0, 0, 0);
   
   return result;
 };

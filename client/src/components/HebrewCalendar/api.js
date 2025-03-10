@@ -8,23 +8,33 @@ export const fetchHebrewDates = async (dates) => {
     const holidays = {};
     
     for (const date of dates) {
-      const dateKey = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      // שימוש בתאריך מקומי ללא שינוי אזור זמן
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // getMonth מחזיר 0-11
+      const day = date.getDate();
+      const dateKey = formatDateKey(date);
+      
       const response = await axios.get(`https://www.hebcal.com/converter`, {
         params: {
           cfg: 'json',
-          date: dateKey,
+          gy: year,
+          gm: month,
+          gd: day,
           g2h: 1,
         },
       });
       
       if (response.data && response.data.hebrew) {
-        hebrewDates[dateKey] = response.data.hebrew;
+        // שמירת התאריך העברי בפורמט נקי יותר
+        hebrewDates[dateKey] = response.data.hebrew.replace(/[\u0591-\u05C7]/g, '');
         
-        // Check if there's a holiday
+        // בדיקה אם יש חג
         if (response.data.events && response.data.events.length > 0) {
-          holidays[dateKey] = response.data.events[0];
+          // ניקוי שמות החגים מטעמי ניקוד
+          holidays[dateKey] = response.data.events[0].replace(/[\u0591-\u05C7]/g, '');
         }
       } else {
+        // שמירת לוג אזהרה במקרה שלא נמצא תאריך עברי
         console.warn(`No Hebrew date found for ${dateKey}`);
         hebrewDates[dateKey] = '';
       }

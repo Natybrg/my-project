@@ -14,16 +14,22 @@ export const getAllReminders = async () => {
 // קבלת תזכורות לטווח תאריכים
 export const getRemindersByDateRange = async (startDate, endDate) => {
   try {
-    const response = await api.get('/reminders/range', {
+    const response = await api.get(`/reminders/range`, {
       params: {
-        startDate,
-        endDate
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
       }
     });
+    
     return response.data;
   } catch (error) {
     console.error('Error fetching reminders by date range:', error);
-    throw error;
+    // אם יש שגיאת אימות, נחזיר מערך ריק ונמשיך
+    if (error.response && error.response.status === 401) {
+      console.error('Authentication error, continuing with empty reminders array');
+      return [];
+    }
+    return [];
   }
 };
 

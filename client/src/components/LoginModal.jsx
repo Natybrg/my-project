@@ -198,17 +198,21 @@ const LoginModal = ({ open, onClose, onSignupClick }) => {
             autoComplete="current-password"
           />
 
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2">
+              אין לך חשבון?{' '}
+              <Button 
+                color="primary" 
+                onClick={onSignupClick} 
+                sx={{ p: 0, minWidth: 'auto', verticalAlign: 'baseline', textTransform: 'none' }}
+              >
+                הירשם כאן
+              </Button>
+            </Typography>
+          </Box>
+
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
             התחבר
-          </Button>
-
-          <Button
-            fullWidth
-            variant="text"
-            sx={{ mt: 1 }}
-            onClick={handleSignupClick}
-          >
-            אין לך חשבון? הירשם כאן
           </Button>
         </form>
       </Box>

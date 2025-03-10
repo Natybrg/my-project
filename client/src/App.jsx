@@ -9,6 +9,7 @@ import DataforShabat from './pages/DataforShabat';
 import UserManagementPage from './RolsPages/gabai/Management';
 import AdminPage from './pages/AdminPage';
 import UserDebtsPage from './pages/UserDebtsPage';
+import DayTimesPage from './pages/DayTimesPage'; // ייבוא הדף החדש
 import theme from './theme';
 import cacheRtl from './cacheRtl';
 import './App.css';
@@ -25,6 +26,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/about" element={<DataforShabat />} />
+              <Route path="/day-times" element={<DayTimesPage />} /> {/* הוספת הנתיב החדש */}
               {/* דפי ניהול מוגנים - אם משתמש לא מורשה מנסה לגשת, הוא יועבר לדף הבית */}
               <Route path="/admin/*" element={<ProtectedRouteAdmin />} />
               <Route path="/profile" element={<div>פרופיל</div>} />

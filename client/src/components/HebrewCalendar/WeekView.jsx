@@ -58,7 +58,7 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
                     
                     {hebrewDate && (
                       <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                        {hebrewDate}
+                        {hebrewDate.split(' ').slice(0, 2).join(' ')}
                       </Typography>
                     )}
                     
@@ -69,7 +69,8 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
                         sx={{ 
                           textAlign: 'center', 
                           mt: 1,
-                          fontWeight: 'bold'
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
                         }}
                       >
                         {holiday}

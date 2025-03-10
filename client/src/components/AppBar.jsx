@@ -10,7 +10,7 @@ import {
   MenuItem,
   Avatar
 } from '@mui/material';
-import { AccountCircle, Home, Payment, Settings, Dashboard } from '@mui/icons-material';
+import { AccountCircle, Home, Payment, Settings, Dashboard, AccessTime } from '@mui/icons-material'; // הוספת אייקון AccessTime
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
@@ -65,174 +65,183 @@ const CustomAppBar = () => {
     }
   };
 
-  const handleOpenLogin = () => {
-    setAnchorEl(null);
-    setLoginOpen(true);
-  };
-  
-  const handleCloseLogin = (loggedIn = false) => {
-    setLoginOpen(false);
-    if (loggedIn) {
-      checkUserLoggedIn();
-    }
-  };
-  
-  const handleOpenSignup = () => {
-    setLoginOpen(false);
-    setSignupOpen(true);
-  };
-  
-  const handleCloseSignup = (registered = false) => {
-    setSignupOpen(false);
-    if (registered) {
-      setLoginOpen(true);
-    }
+  // פתיחת תפריט משתמש
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
+  // סגירת תפריט משתמש
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  // פתיחת חלון התחברות
+  const handleLoginOpen = () => {
+    setLoginOpen(true);
+  };
+
+  // סגירת חלון התחברות
+  const handleLoginClose = () => {
+    setLoginOpen(false);
+  };
+
+  // פתיחת חלון הרשמה
+  const handleSignupOpen = () => {
+    setSignupOpen(true);
+  };
+
+  // סגירת חלון הרשמה
+  const handleSignupClose = () => {
+    setSignupOpen(false);
+  };
+
+  // התנתקות
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('firstName');
     localStorage.removeItem('userRole');
+    
     setIsLoggedIn(false);
     setUserName('אורח');
     setIsAdmin(false);
     setAnchorEl(null);
+    
+    // פרסום אירוע שינוי משתמש
     window.dispatchEvent(new Event('userChange'));
-    navigate('/');  // חזרה לדף הבית אחרי התנתקות
+    
+    // ניווט לדף הבית
+    navigate('/');
   };
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleProfileClick = () => {
-    setAnchorEl(null);
-    navigate('/profile');
-  };
-
-  // Check if the current path is active
-  const isActive = (path) => {
-    return location.pathname === path;
+  // ניווט לדף
+  const navigateTo = (path) => {
+    navigate(path);
   };
 
   return (
-    <>
-      <AppBar position="static" dir="rtl">
-        <Toolbar>
-          {/* שם המשתמש והאייקון בצד ימין */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar sx={{ bgcolor: isLoggedIn ? 'primary.main' : 'grey.500', width: 32, height: 32, mr: 1 }}>
-              {userName.charAt(0)}
-            </Avatar>
-            <Typography 
-              variant="h6" 
-              component="div"
-              sx={{ 
-                fontWeight: 'bold',
-                marginRight: 1
-              }}
-            >
-              {userName}
-            </Typography>
-          </Box>
-
-          {/* אייקון משתמש עם תפריט */}
-          <IconButton 
-            color="inherit"
-            onClick={handleMenuOpen}
-            title={isLoggedIn ? "אפשרויות משתמש" : "התחבר"}
-            sx={{ mr: 2 }}
-          >
-            <AccountCircle />
-          </IconButton>
-          
-          {/* מרווח גמיש */}
-          <Box sx={{ flexGrow: 1 }} />
-
-          {/* כפתורי ניווט בצד שמאל */}
-          {isAdmin && (
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/admin')}
-              startIcon={<Dashboard />}
-              sx={{ ml: 1, fontWeight: isActive('/admin') ? 'bold' : 'normal' }}
-              variant={isActive('/admin') ? "outlined" : "text"}
-            >
-              ניהול
-            </Button>
-          )}
-
+    <AppBar position="static" color="primary">
+      <Toolbar>
+        {/* לוגו ושם האתר - עכשיו בצד ימין */}
+        <Typography variant="h6" component="div">
+          אתר לניהול בית כנסת
+        </Typography>
+        
+        {/* מרווח גמיש שידחוף את כפתורי הניווט למרכז */}
+        <Box sx={{ flexGrow: 1 }} />
+        
+        {/* כפתורי ניווט - עכשיו במרכז */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button 
             color="inherit" 
-            onClick={() => navigate('/payment')}
+            startIcon={<Home />}
+            onClick={() => navigateTo('/')}
+            sx={{ 
+              backgroundColor: location.pathname === '/' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+            }}
+          >
+            דף הבית
+          </Button>
+          
+          <Button 
+            color="inherit" 
+            startIcon={<AccessTime />}
+            onClick={() => navigateTo('/day-times')}
+            sx={{ 
+              backgroundColor: location.pathname === '/day-times' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+            }}
+          >
+            זמני היום
+          </Button>
+          
+          <Button 
+            color="inherit" 
             startIcon={<Payment />}
-            sx={{ ml: 1, fontWeight: isActive('/payment') ? 'bold' : 'normal' }}
-            variant={isActive('/payment') ? "outlined" : "text"}
+            onClick={() => navigateTo('/payment')}
+            sx={{ 
+              backgroundColor: location.pathname === '/payment' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+            }}
           >
             תשלומים
           </Button>
           
-          <Button 
-            color="inherit" 
-            onClick={() => navigate('/')}
-            startIcon={<Home />}
-            sx={{ fontWeight: isActive('/') ? 'bold' : 'normal' }}
-            variant={isActive('/') ? "outlined" : "text"}
-          >
-            בית
-          </Button>
-          
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            {isLoggedIn ? (
-              <>
-                <MenuItem onClick={handleProfileClick}>פרופיל</MenuItem>
-                {isAdmin && (
-                  <MenuItem onClick={() => {
-                    setAnchorEl(null);
-                    navigate('/admin');
-                  }}>ניהול מערכת</MenuItem>
-                )}
-                <MenuItem onClick={handleLogout}>התנתק</MenuItem>
-              </>
-            ) : (
-              <MenuItem onClick={handleOpenLogin}>התחבר</MenuItem>
-            )}
-          </Menu>
-        </Toolbar>
-      </AppBar>
+          {isAdmin && (
+            <Button 
+              color="inherit" 
+              startIcon={<Dashboard />}
+              onClick={() => navigateTo('/admin')}
+              sx={{ 
+                backgroundColor: location.pathname.startsWith('/admin') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+              }}
+            >
+              ניהול
+            </Button>
+          )}
+        </Box>
 
-      <LoginModal 
-        open={loginOpen} 
-        onClose={handleCloseLogin}
-        onSignupClick={handleOpenSignup}
-      />
+        {/* מרווח גמיש שידחוף את אזור המשתמש לצד שמאל */}
+        <Box sx={{ flexGrow: 1 }} />
+        
+        {/* אזור משתמש - עכשיו בצד שמאל */}
+        <Box>
+          {isLoggedIn ? (
+            <>
+              <Chip
+                avatar={<Avatar>{userName.charAt(0)}</Avatar>}
+                label={userName}
+                onClick={handleMenuOpen}
+                color="default"
+                sx={{ 
+                  color: 'white', 
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+                }}
+              />
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <MenuItem onClick={() => { handleMenuClose(); navigateTo('/profile'); }}>פרופיל</MenuItem>
+                <MenuItem onClick={handleLogout}>התנתק</MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Chip
+              avatar={<Avatar><AccountCircle /></Avatar>}
+              label="אורח"
+              onClick={handleLoginOpen}
+              color="default"
+              sx={{ 
+                color: 'white', 
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
+              }}
+            />
+          )}
+        </Box>
+      </Toolbar>
       
+      {/* מודלים */}
+      <LoginModal open={loginOpen} onClose={handleLoginClose} onSignupClick={() => { handleLoginClose(); handleSignupOpen(); }} />
       <SignupModal 
         open={signupOpen} 
-        onClose={handleCloseSignup}
-        onLoginClick={() => {
-          setSignupOpen(false);
-          setLoginOpen(true);
-        }}
+        onClose={handleSignupClose} 
+        onLoginClick={() => { handleSignupClose(); handleLoginOpen(); }}
       />
-    </>
+    </AppBar>
   );
 };
 

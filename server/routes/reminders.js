@@ -5,7 +5,7 @@ const { verifyManager } = require('../middleware/loginMiddelwares');
 const auth = require('../middleware/auth');
 
 // הוספת תזכורת חדשה - רק למנהלים ומעלה
-router.post('/', verifyManager, async (req, res) => {
+router.post('/', auth, verifyManager, async (req, res) => {
   try {
     const { title, description, date } = req.body;
     
@@ -17,7 +17,7 @@ router.post('/', verifyManager, async (req, res) => {
       title,
       description,
       date: new Date(date),
-      createdBy: req.user._id
+      createdBy: req.user.id
     });
     
     await reminder.save();
@@ -46,33 +46,27 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// קבלת תזכורות לטווח תאריכים - זמין לכל המשתמשים המחוברים
-router.get('/range', auth, async (req, res) => {
+// קבלת תזכורות לטווח תאריכים - זמין לכולם (גם למשתמשים לא מחוברים)
+router.get('/range', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
-    if (!startDate || !endDate) {
-      return res.status(400).json({ message: 'תאריך התחלה וסיום הם שדות חובה' });
-    }
-    
+    // שליפת כל התזכורות בטווח התאריכים - ללא בדיקת אימות
     const reminders = await Reminder.find({
-      date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      date: { 
+        $gte: new Date(startDate), 
+        $lte: new Date(endDate) 
       }
-    })
-    .sort({ date: 1 })
-    .populate('createdBy', 'firstName lastName');
+    });
     
-    res.status(200).json(reminders);
+    res.json(reminders);
   } catch (error) {
-    console.error('Error fetching reminders by date range:', error);
-    res.status(500).json({ message: 'שגיאת שרת פנימית', error: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // עדכון תזכורת - רק למנהלים ומעלה
-router.put('/:id', verifyManager, async (req, res) => {
+router.put('/:id', auth, verifyManager, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, date } = req.body;
@@ -104,7 +98,7 @@ router.put('/:id', verifyManager, async (req, res) => {
 });
 
 // מחיקת תזכורת - רק למנהלים ומעלה
-router.delete('/:id', verifyManager, async (req, res) => {
+router.delete('/:id', auth, verifyManager, async (req, res) => {
   try {
     const { id } = req.params;
     

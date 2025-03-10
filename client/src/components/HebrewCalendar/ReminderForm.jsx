@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,20 +15,27 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/he'; // יבוא תמיכה בעברית
-
-// במקום:
-// import { heIL } from 'date-fns/locale';
-
-// יש לייבא את הלוקאל העברי כך:
 import he from 'date-fns/locale/he';
 import { addReminder, updateReminder } from '../../services/reminderService';
 
 const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSuccess }) => {
+  // שימוש ב-useEffect כדי לאתחל את הטופס כאשר הוא נפתח
   const [formData, setFormData] = useState({
-    title: editReminder?.title || '',
-    description: editReminder?.description || '',
-    date: editReminder?.date ? new Date(editReminder.date) : selectedDate || new Date()
+    title: '',
+    description: '',
+    date: null
   });
+  
+  // אתחול הטופס כאשר הוא נפתח או כאשר הפרמטרים משתנים
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: editReminder?.title || '',
+        description: editReminder?.description || '',
+        date: editReminder ? dayjs(editReminder.date) : dayjs(selectedDate)
+      });
+    }
+  }, [open, editReminder, selectedDate]);
   
   const [errors, setErrors] = useState({
     title: '',
@@ -70,10 +77,19 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
     setError('');
     
     try {
+      // הכנת האובייקט לשליחה - המרת התאריך לפורמט ISO
+      const reminderToSave = {
+        title: formData.title,
+        description: formData.description,
+        date: formData.date.toISOString() // המרה ל-ISO string
+      };
+      
+      console.log('Saving reminder with date:', reminderToSave.date);
+      
       if (editReminder) {
-        await updateReminder(editReminder._id, formData);
+        await updateReminder(editReminder._id, reminderToSave);
       } else {
-        await addReminder(formData);
+        await addReminder(reminderToSave);
       }
       
       onSuccess?.();
@@ -123,18 +139,17 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="he">
             <DateTimePicker
               label="תאריך ושעה"
-              value={dayjs(formData.date)}
-              onChange={(newDate) => handleChange('date', newDate.toDate())}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  margin="normal"
-                  required
-                  error={!!errors.date}
-                  helperText={errors.date}
-                />
-              )}
+              value={formData.date}
+              onChange={(newDate) => handleChange('date', newDate)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  margin: "normal",
+                  required: true,
+                  error: !!errors.date,
+                  helperText: errors.date
+                }
+              }}
             />
           </LocalizationProvider>
         </Box>

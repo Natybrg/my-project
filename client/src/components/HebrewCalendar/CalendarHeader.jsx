@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 const CalendarHeader = ({ onPrevWeek, onNextWeek }) => {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-      <Typography variant="h4">לוח שנה עברי</Typography>
+      <Typography variant="h4">זמני היום</Typography>
       <Box>
         <IconButton onClick={onPrevWeek}>
           <ChevronRight />

@@ -7,6 +7,7 @@ const api = axios.create({
 // Add a request interceptor to add the token to each request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  
   if (token) {
     config.headers = {
       ...config.headers,
@@ -78,6 +79,7 @@ export const register = async (userData) => {
     }
   }
 };
+
 // Update payment status to fully paid
 export const updatePaymentStatus = async (paymentId, isPaid) => {
   try {
@@ -136,6 +138,7 @@ export const getAllUsers = async () => {
     throw error.response?.data || { message: 'אירעה שגיאה בקבלת רשימת משתמשים' };
   }
 };
+
 export const updateUser = async (userId, userData) => {
   try {
     const response = await api.put(`/auth/users/${userId}`, userData);

@@ -24,6 +24,7 @@ const style = {
   borderRadius: 2
 };
 
+// בקומפוננטה SignupModal, נצטרך לוודא שהפרופ onLoginClick מועבר כראוי
 const SignupModal = ({ open, onClose, onLoginClick }) => {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -165,9 +166,12 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
     }
   };
   // Handle login click with form reset
+  // בפונקציה handleLoginClick, נבדוק אם onLoginClick קיים לפני שנקרא לו
   const handleLoginClick = () => {
-    resetForm();
-    onLoginClick();
+    onClose(); // סגירת מודל ההרשמה
+    if (typeof onLoginClick === 'function') {
+      onLoginClick(); // פתיחת מודל ההתחברות רק אם הפונקציה קיימת
+    }
   };
   return (
     <Modal open={open} onClose={onClose}>
@@ -260,14 +264,18 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
             הירשם
           </Button>
 
-          <Button
-            fullWidth
-            variant="text"
-            sx={{ mt: 1 }}
-            onClick={handleLoginClick} // Changed to use the new handler
-          >
-            כבר יש לך חשבון? התחבר כאן
-          </Button>
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2">
+              יש לך כבר חשבון?{' '}
+              <Button 
+                color="primary" 
+                onClick={handleLoginClick} 
+                sx={{ p: 0, minWidth: 'auto', verticalAlign: 'baseline', textTransform: 'none' }}
+              >
+                התחבר כאן
+              </Button>
+            </Typography>
+          </Box>
         </form>
       </Box>
     </Modal>
