@@ -152,6 +152,14 @@ const Management = () => {
 
   const handleDeleteUser = async () => {
     try {
+      // Assuming you have a way to get the current user's role
+      const currentUserRole = 'admin'; // Replace this with the actual logic to get the current user's role
+      
+      if (selectedUser.rols === 'admin' && currentUserRole === 'admin') {
+        setError('Admin cannot delete another admin.');
+        return;
+      }
+
       console.log(`Attempting to delete user with ID: ${selectedUser._id}`);
       await deleteUser(selectedUser._id);
       // Re-fetch users to update the UI
@@ -168,6 +176,14 @@ const Management = () => {
   const handleRoleChange = async (e) => {
     const newRole = e.target.value;
     try {
+      // Assuming you have a way to get the current user's role
+      const currentUserRole = 'admin'; // Replace this with the actual logic to get the current user's role
+      
+      if (selectedUser.rols === 'admin' && currentUserRole === 'admin') {
+        setError('Admin cannot change the role of another admin.');
+        return;
+      }
+
       await updateUser(selectedUser._id, { rols: newRole });
       setUsers(users.map(user => 
         user._id === selectedUser._id ? { ...user, rols: newRole } : user
@@ -461,19 +477,21 @@ const Management = () => {
                   >
                     <AddIcon />
                   </IconButton>
-                  <IconButton 
-                    color="error" 
-                    onClick={handleDeleteUser}
-                    sx={{ 
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        transform: 'scale(1.1)',
-                        bgcolor: 'error.light'
-                      }
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  {selectedUser.rols !== 'admin' && (
+                    <IconButton 
+                      color="error" 
+                      onClick={handleDeleteUser}
+                      sx={{ 
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.1)',
+                          bgcolor: 'error.light'
+                        }
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
                 </Box>
               )
             }
