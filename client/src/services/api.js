@@ -195,13 +195,48 @@ export const updateUser = async (userId, userData) => {
 
 export const createAliya = async (userId, aliyaData) => {
   try {
-    const response = await api.post(`/aliyot/addAliyah`, {
-      ...aliyaData,
-      userId: userId,
-    });
+    if (!userId) {
+      throw new Error('חסר מזהה משתמש');
+    }
+
+    // Ensure all required fields exist
+    if (!aliyaData.amount || !aliyaData.parsha || !aliyaData.aliyaType) {
+      throw new Error('חסרים שדות חובה: סכום, פרשה, או סוג עלייה');
+    }
+
+    // Format date properly
+    const formattedDate = aliyaData.date instanceof Date 
+      ? aliyaData.date.toISOString().split('T')[0] // Just get YYYY-MM-DD
+      : typeof aliyaData.date === 'string' 
+        ? aliyaData.date.split('T')[0] // Handle ISO string
+        : new Date().toISOString().split('T')[0]; // Default to today
+
+    // Create payload with all required fields including isPaid
+    const payload = {
+      userId,
+      amount: Number(aliyaData.amount),
+      parsha: aliyaData.parsha,
+      aliyaType: aliyaData.aliyaType,
+      date: formattedDate,
+      isPaid: aliyaData.isPaid !== undefined ? aliyaData.isPaid : false // Add the missing required field
+    };
+
+    console.log('Sending aliya data:', payload);
+
+    const token = localStorage.getItem('token');
+    const response = await api.post('/aliyot/addAliyah', payload);
     return response.data;
   } catch (error) {
-    throw error.response ? error.response.data : error;
+    console.error('Failed to create aliya:', error);
+    
+    // Provide a more specific error message
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('אירעה שגיאה בהוספת העלייה');
+    }
   }
 };
 

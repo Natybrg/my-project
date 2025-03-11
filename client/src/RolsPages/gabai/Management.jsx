@@ -142,6 +142,10 @@ const Management = () => {
       });
       setNewAliya({ amount: '', parsha: '', aliyaType: '' });
       setIsAddingAliya(false);
+      // Refresh user data after adding Aliyah
+      const response = await getAllUsers();
+      const userData = response.data ? response.data : response;
+      setUsers(userData);
     } catch (err) {
       console.error('Error adding aliya:', err);
       setError(err.message || 'Error adding aliya');
@@ -211,14 +215,36 @@ const Management = () => {
   const handleSaveDebt = async () => {
     setAddAliyaLoading(true);
     try {
-      await createAliya(selectedUser._id, {
-        amount: newDebt.amount,
-        parsha: newDebt.parsha,
+      // Validate required fields
+      if (!newDebt.amount || !newDebt.parsha || !newDebt.aliyaType || !newDebt.date) {
+        setError('Missing required fields');
+        setAddAliyaLoading(false);
+        return;
+      }
+
+      // Ensure the fields match what the server expects
+      const debtData = {
+        amount: Number(newDebt.amount), // Ensure amount is a number
+        parsha: newDebt.parsha.trim(), // Trim whitespace
         aliyaType: newDebt.aliyaType,
-        date: newDebt.date,
+        date: newDebt.date instanceof Date ? newDebt.date.toISOString() : newDebt.date, // Safely convert date
+      };
+
+      console.log('Sending debt data:', debtData); // Log the data being sent
+      
+      // Pass userId separately as the first parameter
+      await createAliya(selectedUser._id, debtData);
+      
+      // Reset form and state after successful submission
+      setNewDebt({
+        amount: '',
+        parsha: '',
+        aliyaType: 'אחר',
+        date: new Date(),
       });
-      setIsAddingDebt(false); // Ensure this function updates the state
-      // Optionally refresh user data
+      setIsAddingDebt(false);
+      
+      // Refresh user data after adding Aliyah
       const response = await getAllUsers();
       const userData = response.data ? response.data : response;
       setUsers(userData);

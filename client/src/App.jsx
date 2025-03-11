@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
-import CustomAppBar from './components/AppBar';
+import CustomAppBar from './components/appbar'; // Ensure the casing matches the actual file name
 import PaymentPage from './pages/PaymentPage';
 import HomePage from './pages/HomePage';
 import DataforShabat from './pages/DataforShabat';
@@ -30,7 +30,7 @@ function App() {
               <Route path="/about" element={<DataforShabat />} />
               <Route path="/day-times" element={<DayTimesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              {/* דפי ניהול מוגנים - אם משתמש לא מורשה מנסה לגשת, הוא יועבר לדף הבית */}
+              {/* Protected admin routes */}
               <Route path="/admin/*" element={<ProtectedRouteAdmin />} />
             </Routes>
           </div>
@@ -40,7 +40,7 @@ function App() {
   );
 }
 
-// רכיב להגנה על נתיבי מנהל
+// Protected route component for admin pages
 const ProtectedRouteAdmin = () => {
   const navigate = useNavigate();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -49,7 +49,7 @@ const ProtectedRouteAdmin = () => {
   useEffect(() => {
     const checkAuth = () => {
       const userRole = localStorage.getItem('userRole');
-      console.log('Current user role:', userRole); // Add logging to debug
+      console.log('Current user role:', userRole); // Debugging log
       
       // Allow admin, gabai, and manager roles to access admin routes
       const isAuthorizedRole = userRole === 'admin' || userRole === 'gabai' || userRole === 'manager';
@@ -64,7 +64,7 @@ const ProtectedRouteAdmin = () => {
     
     checkAuth();
     
-    // האזנה לשינויים במשתמש
+    // Listen for user changes
     const handleUserChange = () => checkAuth();
     window.addEventListener('userChange', handleUserChange);
     
@@ -74,11 +74,11 @@ const ProtectedRouteAdmin = () => {
   }, [navigate]);
 
   if (loading) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>טוען...</div>;
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>;
   }
 
   if (!isAuthorized) {
-    return null; // המשתמש יועבר לדף הבית
+    return null; // Redirect to home page
   }
 
   return (
