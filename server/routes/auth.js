@@ -300,4 +300,28 @@ router.put('/user/:userId', auth, async (req, res) => {
   }
 });
 
+// Add this route to your auth.js file where other user-related routes are defined
+
+// Delete user - only for admins
+router.delete('/users/:userId', auth, verifyAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'המשתמש לא נמצא' });
+    }
+    
+    await User.findByIdAndDelete(userId);
+    
+    res.status(200).json({ 
+      message: 'המשתמש נמחק בהצלחה'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'שגיאת שרת פנימית', error: error.message });
+  }
+});
+
 module.exports = router;

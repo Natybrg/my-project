@@ -6,10 +6,11 @@ import CustomAppBar from './components/AppBar';
 import PaymentPage from './pages/PaymentPage';
 import HomePage from './pages/HomePage';
 import DataforShabat from './pages/DataforShabat';
+// Update the import path to ensure it's correct
 import UserManagementPage from './RolsPages/gabai/Management';
 import AdminPage from './pages/AdminPage';
 import UserDebtsPage from './pages/UserDebtsPage';
-import DayTimesPage from './pages/DayTimesPage'; // ייבוא הדף החדש
+import DayTimesPage from './pages/DayTimesPage';
 import theme from './theme';
 import cacheRtl from './cacheRtl';
 import './App.css';
@@ -40,7 +41,7 @@ function App() {
 }
 
 // רכיב להגנה על נתיבי מנהל
-const ProtectedRouteAdmin = ({ children }) => {
+const ProtectedRouteAdmin = () => {
   const navigate = useNavigate();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,8 @@ const ProtectedRouteAdmin = ({ children }) => {
   useEffect(() => {
     const checkAuth = () => {
       const userRole = localStorage.getItem('userRole');
+      console.log('Current user role:', userRole); // Add logging to debug
+      
       // Allow admin, gabai, and manager roles to access admin routes
       const isAuthorizedRole = userRole === 'admin' || userRole === 'gabai' || userRole === 'manager';
       

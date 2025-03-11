@@ -289,3 +289,55 @@
   color: rgba(0, 0, 0, 0.6);
   font-size: 0.875rem !important;
 }
+
+.status-chip.overpaid {
+  background-color: #e1f5fe !important;
+  color: #0277bd !important;
+}
+
+.status-chip.partial {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+}
+
+.status-chip.unpaid {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.status-chip.paid {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+/* עיצוב לסטטוס החזר */
+.status-chip.refund {
+  background-color: #e8eaf6 !important;
+  color: #3f51b5 !important;
+}
+
+/* עיצוב לשורות עם החזר */
+.refund-row {
+  background-color: rgba(63, 81, 181, 0.05) !important;
+}
+
+.refund-row:hover {
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+/* עיצוב לסכום החזר */
+.refund-amount-cell {
+  font-weight: 600 !important;
+  color: #3f51b5 !important;
+}
+
+/* אנימציה לעדכון תשלום */
+@keyframes paymentUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); background-color: rgba(46, 125, 50, 0.2); }
+  100% { transform: scale(1); }
+}
+
+.payment-updated {
+  animation: paymentUpdate 0.8s ease;
+}

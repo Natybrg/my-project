@@ -9,9 +9,9 @@ import {
   Menu,
   MenuItem,
   Avatar,
-  Chip // Added Chip import here
+  Chip
 } from '@mui/material';
-import { AccountCircle, Home, Payment, Settings, Dashboard, AccessTime } from '@mui/icons-material'; // הוספת אייקון AccessTime
+import { AccountCircle, Home, Payment, Dashboard, AccessTime } from '@mui/icons-material'; // Added AccessTime icon
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';

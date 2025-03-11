@@ -93,10 +93,55 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
 // Add a new function for partial payments
 export const makePartialPayment = async (paymentId, amount, note = '') => {
   try {
-    const response = await api.post(`/aliyot/payment/${paymentId}/partial`, { amount, note });
+    // Ensure the paymentId is valid
+    if (!paymentId) {
+      throw new Error('מזהה תשלום חסר');
+    }
+    
+    // Make sure we're sending the correct data format
+    const payload = { 
+      amount: Number(amount),
+      note: note || ''
+      // Remove paymentId from payload as it's already in the URL
+    };
+    
+    console.log('Making partial payment request:', paymentId, payload);
+    
+    // Try using the axios instance directly
+    const response = await api.post(`/aliyot/payment/${paymentId}/partial`, payload);
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'אירעה שגיאה בביצוע התשלום החלקי' };
+    console.error('Partial payment error details:', error);
+    
+    // Check if this is a role/permission issue
+    if (error.response?.status === 403) {
+      // Try to get more information about the current user role
+      const userInfo = localStorage.getItem('userRole') || 'unknown';
+      console.log('Current user role:', userInfo);
+      
+      // Try an alternative endpoint if available
+      try {
+        console.log('Attempting alternative payment method...');
+        const payload = { 
+          amount: Number(amount),
+          note: note || '',
+          paymentId: paymentId
+        };
+        
+        // Try a more general endpoint if available
+        const altResponse = await api.post('/aliyot/payments/process', payload);
+        return altResponse.data;
+      } catch (altError) {
+        console.error('Alternative payment also failed:', altError);
+        throw { message: 'אין לך הרשאה לבצע תשלום חלקי. אנא פנה למנהל המערכת.' };
+      }
+    }
+    
+    if (error.response?.data?.message) {
+      throw { message: error.response.data.message };
+    } else {
+      throw { message: 'אירעה שגיאה בביצוע התשלום החלקי' };
+    }
   }
 };
 
@@ -190,6 +235,16 @@ export const updateUserProfile = async (userId, profileData) => {
     } else {
       throw { message: 'אירעה שגיאה בעדכון הפרופיל' };
     }
+  }
+};
+
+export const deleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`/auth/users/${userId}`); // Updated path to match server route
+    return response.data;
+  } catch (error) {
+    console.error('Error in deleteUser:', error);
+    throw new Error('Failed to delete user');
   }
 };
 

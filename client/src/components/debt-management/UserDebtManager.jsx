@@ -160,12 +160,48 @@ const UserDebtManager = ({ userId, onClose }) => {
   };
 
   // Mark debt as paid
+  // In handleMarkAsPaid function
   const handleMarkAsPaid = async (debtId) => {
     try {
       setLoading(true);
-      await updatePaymentStatus(debtId, true);
+      
+      // Get token
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('אין הרשאה. נא להתחבר מחדש');
+        setLoading(false);
+        return;
+      }
+      
+      // Use only one endpoint format that you know works
+      try {
+        const response = await fetch(`http://127.0.0.1:3002/aliyot/debts/${debtId}/pay`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            isPaid: true
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Payment status update failed:', errorData);
+          throw new Error(errorData.message || `Payment status update failed with status: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.error('Direct fetch payment status update failed:', fetchError);
+        
+        // If direct fetch fails, try using the API function as fallback
+        await updatePaymentStatus(debtId, true);
+      }
+      
       await refreshData();
     } catch (error) {
+      console.error('Mark as paid failed:', error);
       setError(error.message || 'אירעה שגיאה בעדכון התשלום');
     } finally {
       setLoading(false);
@@ -186,6 +222,7 @@ const UserDebtManager = ({ userId, onClose }) => {
   };
 
   // Save partial payment
+  // In handleSavePartialPayment function
   const handleSavePartialPayment = async () => {
     try {
       setLoading(true);
@@ -196,19 +233,53 @@ const UserDebtManager = ({ userId, onClose }) => {
         return;
       }
       
-      await makePartialPayment(currentDebt._id, amount, partialNote);
+      // Get token
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('אין הרשאה. נא להתחבר מחדש');
+        setLoading(false);
+        return;
+      }
+      
+      // Use only one endpoint format that you know works
+      try {
+        const response = await fetch(`http://127.0.0.1:3002/aliyot/debts/${currentDebt._id}/partial-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount: amount,
+            note: partialNote || ''
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Payment failed:', errorData);
+          throw new Error(errorData.message || `Payment failed with status: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.error('Direct fetch payment failed:', fetchError);
+        
+        // If direct fetch fails, try using the API function as fallback
+        await makePartialPayment(currentDebt._id, amount, partialNote);
+      }
       
       setActiveDialog(null);
       await refreshData();
     } catch (error) {
+      console.error('Payment failed:', error);
       setError(error.message || 'אירעה שגיאה בביצוע התשלום החלקי');
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Open new debt dialog
-  const handleNewDebt = () => {
+  const handleNewDebt = useCallback(() => {
     if (activeDialog) {
       console.log('Dialog already open, not opening new debt dialog');
       return; // If another dialog is open, don't open this one
@@ -221,8 +292,21 @@ const UserDebtManager = ({ userId, onClose }) => {
       date: new Date().toISOString().split('T')[0]
     });
     safeSetActiveDialog('new');
-  };
-  
+  }, [activeDialog, safeSetActiveDialog]);
+
+  // Open bulk payment dialog
+  const handleBulkPayment = useCallback((type) => {
+    if (activeDialog) {
+      console.log('Dialog already open, not opening bulk payment dialog');
+      return; // If another dialog is open, don't open this one
+    }
+    
+    setBulkPaymentType(type);
+    setBulkPaymentAmount('');
+    setBulkPaymentNote('');
+    safeSetActiveDialog('bulkPayment');
+  }, [activeDialog, safeSetActiveDialog]);
+
   // Save new debt
   const handleSaveNewDebt = async () => {
     try {
@@ -245,29 +329,25 @@ const UserDebtManager = ({ userId, onClose }) => {
       setActiveDialog(null);
       await refreshData();
     } catch (error) {
-      setError(error.message || 'אירעה שגיאה בהוספת החוב החדש');
+      setError(error.message || 'אירעה שגיאה בהוספת החוב חדש');
     } finally {
       setLoading(false);
     }
   };
-  
-  // Open bulk payment dialog
-  const handleBulkPayment = (type) => {
-    if (activeDialog) {
-      console.log('Dialog already open, not opening bulk payment dialog');
-      return; // If another dialog is open, don't open this one
-    }
-    
-    setBulkPaymentType(type);
-    setBulkPaymentAmount(type === 'full' ? statistics.unpaidAmount.toString() : '');
-    setBulkPaymentNote('');
-    safeSetActiveDialog('bulkPayment');
-  };
-  
-  // Save bulk payment
+
+  // Fix the bulk payment function
   const handleSaveBulkPayment = async () => {
     try {
       setLoading(true);
+      
+      // Get token
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('אין הרשאה. נא להתחבר מחדש');
+        setLoading(false);
+        return;
+      }
       
       if (bulkPaymentType === 'full') {
         // Pay all unpaid debts
@@ -299,7 +379,31 @@ const UserDebtManager = ({ userId, onClose }) => {
           if (unpaidAmount <= 0) continue;
           
           const paymentAmount = Math.min(remainingAmount, unpaidAmount);
-          await makePartialPayment(debt._id, paymentAmount, bulkPaymentNote);
+          
+          // Try using the API function first
+          try {
+            await makePartialPayment(debt._id, paymentAmount, bulkPaymentNote);
+          } catch (apiError) {
+            console.error('API bulk payment failed:', apiError);
+            
+            // If API call fails, try direct fetch as fallback
+            const response = await fetch(`http://127.0.0.1:3002/aliyot/payment/${debt._id}/partial`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                amount: paymentAmount,
+                note: bulkPaymentNote || ''
+              })
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || `Payment failed with status: ${response.status}`);
+            }
+          }
           
           remainingAmount -= paymentAmount;
         }
@@ -308,6 +412,7 @@ const UserDebtManager = ({ userId, onClose }) => {
       setActiveDialog(null);
       await refreshData();
     } catch (error) {
+      console.error('Bulk payment failed:', error);
       setError(error.message || 'אירעה שגיאה בביצוע תשלום מרוכז');
     } finally {
       setLoading(false);
@@ -419,6 +524,8 @@ const UserDebtManager = ({ userId, onClose }) => {
             aliyaType={editedAliyaType}
             onAliyaTypeChange={(e) => setEditedAliyaType(e.target.value)}
             onSave={handleSaveDebt}
+            disableRestoreFocus
+            disableEnforceFocus
           />
           
           <PartialPaymentDialog 
@@ -430,6 +537,8 @@ const UserDebtManager = ({ userId, onClose }) => {
             note={partialNote}
             onNoteChange={(e) => setPartialNote(e.target.value)}
             onSave={handleSavePartialPayment}
+            disableRestoreFocus
+            disableEnforceFocus
           />
           
           <NewDebtDialog
@@ -440,6 +549,8 @@ const UserDebtManager = ({ userId, onClose }) => {
               setNewDebtData(prev => ({ ...prev, [field]: value }));
             }}
             onSave={handleSaveNewDebt}
+            disableRestoreFocus
+            disableEnforceFocus
           />
           
           <BulkPaymentDialog
@@ -453,6 +564,8 @@ const UserDebtManager = ({ userId, onClose }) => {
             totalUnpaid={statistics.unpaidAmount}
             onSave={handleSaveBulkPayment}
             disabled={bulkPaymentType === 'partial' && (!bulkPaymentAmount || parseFloat(bulkPaymentAmount) <= 0)}
+            disableRestoreFocus
+            disableEnforceFocus
           />
         </>
       )}

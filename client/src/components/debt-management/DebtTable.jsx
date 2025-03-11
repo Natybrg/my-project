@@ -28,6 +28,7 @@ import './DebtTable.css';
  * @returns {string} Formatted date
  */
 const formatDate = (dateString) => {
+  if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('he-IL');
 };
@@ -43,8 +44,8 @@ const formatDate = (dateString) => {
  * @param {Function} onDebtUpdated - Callback when debt is updated
  */
 const DebtTable = ({ 
-  debts, 
-  loading, 
+  debts = [], 
+  loading = false, 
   onEditDebt, 
   onMarkAsPaid, 
   onPartialPayment,
@@ -54,94 +55,73 @@ const DebtTable = ({
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [updatingDebtId, setUpdatingDebtId] = useState(null);
 
-  // Prevent any action if actions are disabled
   const handleAction = (actionFn, ...args) => {
-    if (disableActions) {
-      console.log('Actions are disabled, ignoring click');
+    if (!actionFn || disableActions) {
+      console.log('Action unavailable or disabled');
       return;
     }
     actionFn(...args);
   };
 
-  // Handle marking debt as paid with server update
+  // In handleMarkAsPaid function
   const handleMarkAsPaid = async (debtId) => {
     try {
-      setUpdatingDebtId(debtId);
+      setLoading(true);
       
-      // Call the API to update the debt status
-      const response = await axios.put(`/api/debts/${debtId}/pay`, {
-        isPaid: true,
-        paidAmount: debts.find(debt => debt._id === debtId).amount
-      });
+      // Use the correct endpoint
+      await updatePaymentStatus(debtId, true);
       
-      // Call the callback to update the UI
-      if (onDebtUpdated) {
-        onDebtUpdated(response.data);
+      // Refresh data or update UI as needed
+      if (onMarkAsPaid) {
+        onMarkAsPaid(debtId);
       }
-      
-      // Call the original handler
-      onMarkAsPaid(debtId);
-      
-      setSnackbar({
-        open: true,
-        message: 'החוב סומן כשולם בהצלחה',
-        severity: 'success'
-      });
     } catch (error) {
       console.error('Error updating debt:', error);
-      setSnackbar({
-        open: true,
-        message: 'אירעה שגיאה בעדכון החוב',
-        severity: 'error'
-      });
+      // Handle error appropriately
     } finally {
-      setUpdatingDebtId(null);
+      setLoading(false);
     }
   };
 
-  // Handle partial payment with server update
   const handlePartialPayment = async (debt) => {
-    // First call the UI handler to get the partial payment amount
+    if (!debt?._id) return;
+
     handleAction(onPartialPayment, debt, async (partialAmount) => {
-      if (partialAmount) {
-        try {
-          setUpdatingDebtId(debt._id);
-          
-          // Calculate the new paid amount
-          const newPaidAmount = (debt.paidAmount || 0) + partialAmount;
-          
-          // Call the API to update the debt
-          const response = await axios.put(`/api/debts/${debt._id}/partial-payment`, {
-            paidAmount: newPaidAmount,
-            isPaid: newPaidAmount >= debt.amount
-          });
-          
-          // Call the callback to update the UI
-          if (onDebtUpdated) {
-            onDebtUpdated(response.data);
-          }
-          
-          setSnackbar({
-            open: true,
-            message: `תשלום חלקי של ₪${partialAmount} נרשם בהצלחה`,
-            severity: 'success'
-          });
-        } catch (error) {
-          console.error('Error updating debt with partial payment:', error);
-          setSnackbar({
-            open: true,
-            message: 'אירעה שגיאה בעדכון התשלום החלקי',
-            severity: 'error'
-          });
-        } finally {
-          setUpdatingDebtId(null);
-        }
+      if (!partialAmount || isNaN(partialAmount)) return;
+
+      try {
+        setUpdatingDebtId(debt._id);
+        
+        const newPaidAmount = (debt.paidAmount || 0) + Number(partialAmount);
+        const isPaid = newPaidAmount >= debt.amount;
+        
+        const response = await axios.put(`/api/debts/${debt._id}`, {
+          paidAmount: newPaidAmount,
+          isPaid
+        });
+        
+        if (onDebtUpdated) onDebtUpdated(response.data);
+        
+        setSnackbar({
+          open: true,
+          message: `תשלום חלקי של ₪${partialAmount} נרשם בהצלחה`,
+          severity: 'success'
+        });
+      } catch (error) {
+        console.error('Error updating debt with partial payment:', error);
+        setSnackbar({
+          open: true,
+          message: 'אירעה שגיאה בעדכון התשלום החלקי',
+          severity: 'error'
+        });
+      } finally {
+        setUpdatingDebtId(null);
       }
     });
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -170,7 +150,7 @@ const DebtTable = ({
                   </Typography>
                 </TableCell>
               </TableRow>
-            ) : debts.length === 0 ? (
+            ) : !debts?.length ? (
               <TableRow>
                 <TableCell colSpan={8} align="center" className="empty-cell">
                   <Typography variant="body1">
@@ -187,15 +167,13 @@ const DebtTable = ({
                     <Chip 
                       label={debt.aliyaType} 
                       size="small" 
-                      className={`aliya-type-chip ${debt.aliyaType.replace(/\s+/g, '-').toLowerCase()}`}
+                      className={`aliya-type-chip ${debt.aliyaType?.replace(/\s+/g, '-').toLowerCase() || ''}`}
                     />
                   </TableCell>
                   <TableCell className="amount-cell">₪{debt.amount}</TableCell>
                   <TableCell className="paid-amount-cell">₪{debt.paidAmount || 0}</TableCell>
                   <TableCell className="remaining-amount-cell">
-                    ₪{(debt.amount - (debt.paidAmount || 0)) > 0 
-                      ? (debt.amount - (debt.paidAmount || 0)) 
-                      : 0}
+                    ₪{Math.max(0, debt.amount - (debt.paidAmount || 0))}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -228,7 +206,7 @@ const DebtTable = ({
                               <IconButton
                                 color="success"
                                 size="small"
-                                onClick={() => handleMarkAsPaid(debt._id)}
+                                onClick={() => handleMarkAsPaid(debt)}
                                 disabled={disableActions || updatingDebtId === debt._id}
                                 className="action-button paid-button"
                               >
