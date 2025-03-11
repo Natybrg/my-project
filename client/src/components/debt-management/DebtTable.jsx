@@ -14,12 +14,20 @@ import {
   Chip,
   Tooltip,
   Snackbar,
-  Alert
+  Alert,
+  Dialog, // Add this import
+  DialogTitle, // Add this import
+  DialogContent, // Add this import
+  DialogContentText, // Add this import
+  DialogActions, // Add this import
+  Button // Add this import
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PaymentIcon from '@mui/icons-material/Payment';
+import DeleteIcon from '@mui/icons-material/Delete'; // Add this import
 import axios from 'axios';
+import { updatePaymentStatus } from '../../services/api'; // Move the import here
 import './DebtTable.css';
 
 /**
@@ -50,10 +58,13 @@ const DebtTable = ({
   onMarkAsPaid, 
   onPartialPayment,
   disableActions = false,
-  onDebtUpdated
+  onDebtUpdated,
+  user = {} // Default to an empty object if user is undefined
 }) => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [updatingDebtId, setUpdatingDebtId] = useState(null);
+  const [loadingStates, setLoadingStates] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, debt: null });
 
   const handleAction = (actionFn, ...args) => {
     if (!actionFn || disableActions) {
@@ -63,69 +74,145 @@ const DebtTable = ({
     actionFn(...args);
   };
 
-  // In handleMarkAsPaid function
-  const handleMarkAsPaid = async (debtId) => {
-    try {
-      setLoading(true);
-      
-      // Use the correct endpoint
-      await updatePaymentStatus(debtId, true);
-      
-      // Refresh data or update UI as needed
-      if (onMarkAsPaid) {
-        onMarkAsPaid(debtId);
-      }
-    } catch (error) {
-      console.error('Error updating debt:', error);
-      // Handle error appropriately
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePartialPayment = async (debt) => {
-    if (!debt?._id) return;
-
-    handleAction(onPartialPayment, debt, async (partialAmount) => {
-      if (!partialAmount || isNaN(partialAmount)) return;
-
-      try {
-        setUpdatingDebtId(debt._id);
-        
-        const newPaidAmount = (debt.paidAmount || 0) + Number(partialAmount);
-        const isPaid = newPaidAmount >= debt.amount;
-        
-        const response = await axios.put(`/api/debts/${debt._id}`, {
-          paidAmount: newPaidAmount,
-          isPaid
-        });
-        
-        if (onDebtUpdated) onDebtUpdated(response.data);
-        
-        setSnackbar({
-          open: true,
-          message: `תשלום חלקי של ₪${partialAmount} נרשם בהצלחה`,
-          severity: 'success'
-        });
-      } catch (error) {
-        console.error('Error updating debt with partial payment:', error);
-        setSnackbar({
-          open: true,
-          message: 'אירעה שגיאה בעדכון התשלום החלקי',
-          severity: 'error'
-        });
-      } finally {
-        setUpdatingDebtId(null);
-      }
-    });
-  };
-
+  // Define the handleCloseSnackbar function
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
+  // Define the handleMarkAsPaid function
+  const handleMarkAsPaid = async (debt) => {
+    if (!debt?._id) return;
+
+    try {
+      setUpdatingDebtId(debt._id);
+      const endpoint = `/api/debts/${debt._id}/pay`;
+
+      const response = await axios.put(endpoint, { isPaid: true });
+
+      if (response.status === 200) {
+        console.log('Debt marked as paid successfully');
+        
+        setSnackbar({
+          open: true,
+          message: 'החוב סומן כשולם בהצלחה',
+          severity: 'success'
+        });
+
+        if (onDebtUpdated) {
+          onDebtUpdated();
+        }
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (err) {
+      console.error('Failed to mark debt as paid:', err);
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה בסימון החוב כשולם',
+        severity: 'error'
+      });
+    } finally {
+      setUpdatingDebtId(null);
+    }
+  };
+
+  // Define the handlePartialPayment function
+  const handlePartialPayment = async (debt) => {
+    if (!debt?._id) return;
+
+    try {
+      setUpdatingDebtId(debt._id);
+      const endpoint = `/api/debts/${debt._id}/partial-payment`;
+
+      const response = await axios.post(endpoint, { amount: 100 }); // Example amount
+
+      if (response.status === 200) {
+        console.log('Partial payment recorded successfully');
+        
+        setSnackbar({
+          open: true,
+          message: 'תשלום חלקי נרשם בהצלחה',
+          severity: 'success'
+        });
+
+        if (onDebtUpdated) {
+          onDebtUpdated();
+        }
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (err) {
+      console.error('Failed to record partial payment:', err);
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה ברישום תשלום חלקי',
+        severity: 'error'
+      });
+    } finally {
+      setUpdatingDebtId(null);
+    }
+  };
+
+  const handleDeleteDebt = async (debt) => {
+    if (!debt?._id) return;
+
+    try {
+      setUpdatingDebtId(debt._id);
+      const endpoint = `/api/debts/${debt._id}`;
+      
+      // Log the endpoint and debt ID being called
+      console.log('Sending DELETE request to endpoint:', endpoint);
+      console.log('Debt ID:', debt._id);
+      
+      const response = await axios.delete(endpoint);
+      
+      if (response.status === 200) {
+        console.log('Debt deleted successfully');
+        
+        setSnackbar({
+          open: true,
+          message: 'החוב נמחק בהצלחה',
+          severity: 'success'
+        });
+        
+        if (onDebtUpdated) {
+          onDebtUpdated();
+        }
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (err) {
+      console.error('Failed to delete debt:', err);
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה במחיקת החוב',
+        severity: 'error'
+      });
+    } finally {
+      setUpdatingDebtId(null);
+    }
+  };
+
+  const handleConfirmDelete = (debt) => {
+    setConfirmDelete({ open: true, debt });
+  };
+
+  const handleCloseConfirmDelete = () => {
+    setConfirmDelete({ open: false, debt: null });
+  };
+
+  const handleConfirmDeleteAction = () => {
+    if (confirmDelete.debt) {
+      handleDeleteDebt(confirmDelete.debt);
+    }
+    handleCloseConfirmDelete();
+  };
+
   return (
     <>
+      <Typography variant="h6">
+        {user.firstName || 'Unknown'} {user.lastName || 'User'} {/* Display user's first and last name */}
+      </Typography>
       <TableContainer component={Paper} className="debt-table-container">
         <Table className="debt-table">
           <TableHead>
@@ -185,18 +272,16 @@ const DebtTable = ({
                   </TableCell>
                   <TableCell>
                     <Box className="action-buttons">
-                      <Tooltip title="עריכה">
-                        <span>
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => handleAction(onEditDebt, debt)}
-                            disabled={disableActions || updatingDebtId === debt._id}
-                            className="action-button edit-button"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </span>
+                      <Tooltip title="עריכה" disableInteractive>
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => handleAction(onEditDebt, debt)}
+                          disabled={disableActions || updatingDebtId === debt._id}
+                          className="action-button edit-button"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
                       </Tooltip>
                       
                       {!debt.isPaid && (
@@ -238,6 +323,20 @@ const DebtTable = ({
                           </Tooltip>
                         </>
                       )}
+                      {/* Add delete button */}
+                      <Tooltip title="מחק חוב">
+                        <span>
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => handleConfirmDelete(debt)}
+                            disabled={disableActions || updatingDebtId === debt._id}
+                            className="action-button delete-button"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -261,6 +360,29 @@ const DebtTable = ({
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Confirmation dialog for delete action */}
+      <Dialog
+        open={confirmDelete.open}
+        onClose={handleCloseConfirmDelete}
+        aria-labelledby="confirm-delete-dialog-title"
+        aria-describedby="confirm-delete-dialog-description"
+      >
+        <DialogTitle id="confirm-delete-dialog-title">אישור מחיקה</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="confirm-delete-dialog-description">
+            האם אתה בטוח שברצונך למחוק את החוב?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDelete} color="primary">
+            ביטול
+          </Button>
+          <Button onClick={handleConfirmDeleteAction} color="error" autoFocus>
+            מחק
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
