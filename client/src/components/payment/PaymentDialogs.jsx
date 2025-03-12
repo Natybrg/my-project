@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,63 +7,168 @@ import {
   Button,
   TextField,
   Typography,
-  CircularProgress,
-  DialogContentText
-} from "@mui/material";
+  Box,
+  useTheme,
+  IconButton,
+  CircularProgress
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 // Dialog for partial payment
 export const PartialPaymentDialog = ({
   open,
   onClose,
+  payment,
+  amount,
+  setAmount,
+  note,
+  setNote,
   onSubmit,
-  paymentData,
-  partialAmount,
-  setPartialAmount,
-  partialNote,
-  setPartialNote,
   loading
 }) => {
+  const theme = useTheme();
+  const remainingAmount = payment ? payment.amount - (payment.paidAmount || 0) : 0;
+
   return (
-    <Dialog open={open} onClose={onClose} dir="rtl">
-      <DialogTitle>תשלום חלקי</DialogTitle>
-      <DialogContent>
-        <DialogContentText mb={2}>
-          סכום מלא: ₪{paymentData?.amount}
-          {paymentData?.paidAmount > 0 && `, שולם עד כה: ₪${paymentData.paidAmount}`}
-        </DialogContentText>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+          background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${theme.palette.background.default})`
+        }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          תשלום חלקי
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{
+            color: theme.palette.text.secondary,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            פרטי התשלום
+          </Typography>
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 1,
+              bgcolor: theme.palette.background.default,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              סוג עלייה: <strong>{payment?.aliyaType}</strong>
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              סכום כולל: <strong>₪{payment?.amount?.toLocaleString()}</strong>
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              שולם עד כה: <strong>₪{payment?.paidAmount?.toLocaleString() || 0}</strong>
+            </Typography>
+            <Typography variant="body2" color="primary" fontWeight={600}>
+              נותר לתשלום: ₪{remainingAmount?.toLocaleString()}
+            </Typography>
+          </Box>
+        </Box>
+
         <TextField
-          autoFocus
-          margin="dense"
+          fullWidth
           label="סכום לתשלום"
           type="number"
-          fullWidth
-          variant="outlined"
-          value={partialAmount}
-          onChange={(e) => setPartialAmount(e.target.value)}
-          inputProps={{ min: 1, max: paymentData?.amount - (paymentData?.paidAmount || 0) }}
-          sx={{ mb: 2 }}
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          inputProps={{ min: 0, max: remainingAmount }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main
+              }
+            }
+          }}
         />
+
         <TextField
-          margin="dense"
-          label="הערה (אופציונלי)"
-          type="text"
           fullWidth
-          variant="outlined"
-          value={partialNote}
-          onChange={(e) => setPartialNote(e.target.value)}
+          label="הערות"
+          multiline
+          rows={3}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main
+              }
+            }
+          }}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary">
-          בטל
-        </Button>
-        <Button 
-          onClick={onSubmit} 
-          color="primary" 
-          variant="contained" 
-          disabled={!partialAmount || partialAmount <= 0 || loading}
+
+      <DialogActions
+        sx={{
+          p: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          gap: 1
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          disabled={loading}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
         >
-          {loading ? <CircularProgress size={24} /> : "שלם"}
+          ביטול
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onSubmit}
+          disabled={loading || !amount || amount <= 0 || amount > remainingAmount}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            bgcolor: theme.palette.success.main,
+            '&:hover': {
+              bgcolor: theme.palette.success.dark
+            }
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'אישור תשלום'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -71,33 +176,92 @@ export const PartialPaymentDialog = ({
 };
 
 // Dialog for bulk payment
-export const BulkPaymentDialog = ({
-  open,
-  onClose,
-  onSubmit,
-  loading,
-  unpaidAmount
-}) => {
+export const BulkPaymentDialog = ({ open, onClose, onSubmit, loading }) => {
+  const theme = useTheme();
+
   return (
-    <Dialog open={open} onClose={onClose} dir="rtl">
-      <DialogTitle>תשלום כל החיובים</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          האם אתה בטוח שברצונך לשלם את כל החיובים הלא משולמים?
-          סכום כולל לתשלום: ₪{unpaidAmount}
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary">
-          בטל
-        </Button>
-        <Button 
-          onClick={onSubmit} 
-          color="success" 
-          variant="contained"
-          disabled={loading}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+          background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${theme.palette.background.default})`
+        }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          תשלום מלא לכל החיובים
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{
+            color: theme.palette.text.secondary,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
         >
-          {loading ? <CircularProgress size={24} /> : "אשר תשלום"}
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 3 }}>
+        <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+          האם אתה בטוח שברצונך לשלם את כל החיובים שטרם שולמו?
+        </Typography>
+      </DialogContent>
+
+      <DialogActions
+        sx={{
+          p: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          gap: 1
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          disabled={loading}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
+        >
+          ביטול
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onSubmit}
+          disabled={loading}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            bgcolor: theme.palette.success.main,
+            '&:hover': {
+              bgcolor: theme.palette.success.dark
+            }
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'אישור תשלום'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -108,59 +272,135 @@ export const BulkPaymentDialog = ({
 export const BulkPartialPaymentDialog = ({
   open,
   onClose,
-  onSubmit,
   amount,
   setAmount,
   note,
   setNote,
-  loading,
-  unpaidAmount
+  onSubmit,
+  loading
 }) => {
+  const theme = useTheme();
+
   return (
-    <Dialog open={open} onClose={onClose} dir="rtl">
-      <DialogTitle>תשלום חלקי כולל</DialogTitle>
-      <DialogContent>
-        <DialogContentText mb={2}>
-          סכום כולל לא משולם: ₪{unpaidAmount}
-        </DialogContentText>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+          background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${theme.palette.background.default})`
+        }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          תשלום חלקי לכל החיובים
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{
+            color: theme.palette.text.secondary,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 3 }}>
         <TextField
-          autoFocus
-          margin="dense"
+          fullWidth
           label="סכום לתשלום"
           type="number"
-          fullWidth
-          variant="outlined"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          inputProps={{ min: 1, max: unpaidAmount }}
-          sx={{ mb: 2 }}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          inputProps={{ min: 0 }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main
+              }
+            }
+          }}
         />
+
         <TextField
-          margin="dense"
-          label="הערה (אופציונלי)"
-          type="text"
           fullWidth
-          variant="outlined"
+          label="הערות"
+          multiline
+          rows={3}
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main
+              }
+            }
+          }}
         />
-        <Typography variant="body2" color="text.secondary" mt={2}>
-          התשלום יחולק לפי סדר כרונולוגי (החיוב הישן ביותר ישולם קודם)
-        </Typography>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary">
-          בטל
-        </Button>
-        <Button 
-          onClick={onSubmit} 
-          color="primary" 
-          variant="contained" 
-          disabled={!amount || amount <= 0 || loading}
+
+      <DialogActions
+        sx={{
+          p: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          gap: 1
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          disabled={loading}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            '&:hover': {
+              bgcolor: theme.palette.action.hover
+            }
+          }}
         >
-          {loading ? <CircularProgress size={24} /> : "שלם"}
+          ביטול
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onSubmit}
+          disabled={loading || !amount || amount <= 0}
+          sx={{
+            borderRadius: 1,
+            px: 3,
+            bgcolor: theme.palette.success.main,
+            '&:hover': {
+              bgcolor: theme.palette.success.dark
+            }
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'אישור תשלום'}
         </Button>
       </DialogActions>
     </Dialog>
   );
+};
+
+export default {
+  PartialPaymentDialog,
+  BulkPaymentDialog,
+  BulkPartialPaymentDialog
 };

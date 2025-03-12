@@ -109,11 +109,20 @@ const UserDebtsPage = () => {
         fullWidth
         maxWidth="md"
         PaperProps={{
-          sx: { minHeight: '80vh' }
+          sx: { 
+            minHeight: '80vh',
+            zIndex: 1000
+          }
+        }}
+        sx={{
+          zIndex: 1000
         }}
         disableEscapeKeyDown
         disableAutoFocus={true}
-        BackdropProps={{ onClick: (e) => e.stopPropagation() }}
+        BackdropProps={{ 
+          onClick: (e) => e.stopPropagation(),
+          sx: { zIndex: 999 }
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <DialogContent sx={{ p: 0 }}>

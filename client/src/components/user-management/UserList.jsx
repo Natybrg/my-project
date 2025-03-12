@@ -23,7 +23,8 @@ import {
   Card,
   CardHeader,
   useTheme,
-  Stack
+  Stack,
+  Button
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -33,7 +34,8 @@ import {
   SupervisorAccount as AdminIcon,
   AccountBalance as GabaiIcon,
   Business as ManagerIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  MonetizationOn as MonetizationOnIcon
 } from '@mui/icons-material';
 import './UserList.css';
 
@@ -48,22 +50,23 @@ import './UserList.css';
 const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [showOnlyWithDebt, setShowOnlyWithDebt] = useState(false);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const theme = useTheme();
 
-  // Filter users based on search term and role filter
+  // Filter users based on search term, role filter and debt
   const filteredUsers = users.filter(user => {
-    if (!user.firstName || !user.lastName || !user.email) return false;
-    
     const matchesSearch = 
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone?.includes(searchTerm);
     
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all' || user.rols === roleFilter;
     
-    return matchesSearch && matchesRole;
+    const matchesDebt = !showOnlyWithDebt || (user.debt && user.debt > 0);
+    
+    return matchesSearch && matchesRole && matchesDebt;
   });
 
   // Paginate users
@@ -141,7 +144,7 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
           className="filter-card-header"
           sx={{ bgcolor: 'background.filterHeader', py: 1.5 }}
         />
-        <Box className="search-filter-container" sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box className="search-filter-container" sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField
             className="search-field"
             label="חיפוש משתמשים"
@@ -172,6 +175,26 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
               <MenuItem value="user">משתמש</MenuItem>
             </Select>
           </FormControl>
+
+          <Button
+            variant={showOnlyWithDebt ? "contained" : "outlined"}
+            color="primary"
+            onClick={() => setShowOnlyWithDebt(!showOnlyWithDebt)}
+            startIcon={<MonetizationOnIcon />}
+            sx={{
+              minWidth: '150px',
+              height: '56px',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+              }
+            }}
+          >
+            {showOnlyWithDebt ? "הצג את כולם" : "הצג חייבים בלבד"}
+          </Button>
         </Box>
       </Card>
       
@@ -215,7 +238,7 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
               }
             }}
           >
-            רשימת משתמשים ({filteredUsers.length})
+            {showOnlyWithDebt ? 'משתמשים עם חוב' : 'רשימת משתמשים'} ({filteredUsers.length})
           </Typography>
         </Box>
         
@@ -233,9 +256,11 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
             </Box>
           ) : paginatedUsers.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="text.secondary">לא נמצאו משתמשים</Typography>
+              <Typography variant="h6" color="text.secondary">
+                {showOnlyWithDebt ? 'אין משתמשים עם חוב' : 'לא נמצאו משתמשים'}
+              </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                נסה לשנות את החיפוש או לבדוק שיש משתמשים במערכת
+                {showOnlyWithDebt ? 'כל המשתמשים מעודכנים בתשלומים' : 'נסה לשנות את החיפוש או לבדוק שיש משתמשים במערכת'}
               </Typography>
             </Box>
           ) : (
@@ -256,9 +281,9 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
               >
                 <ListItemAvatar>
                   <Avatar 
-                    className={`user-avatar ${user.role || ''}`}
+                    className={`user-avatar ${user.rols || ''}`}
                     sx={{ 
-                      bgcolor: getRoleColor(user.role),
+                      bgcolor: getRoleColor(user.rols),
                       transition: 'all 0.3s ease',
                       '&:hover': {
                         transform: 'scale(1.1)',
@@ -271,21 +296,39 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
                 </ListItemAvatar>
                 <ListItemText
                   primary={
-                    <Typography 
-                      className="user-name"
-                      sx={{ 
-                        fontWeight: 600,
-                        color: 'text.primary'
-                      }}
-                    >
-                      {user.firstName} {user.lastName}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography 
+                        className="user-name"
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'text.primary'
+                        }}
+                      >
+                        {user.firstName} {user.lastName}
+                      </Typography>
+                      {user.debt > 0 && (
+                        <Chip
+                          label={`חוב: ${user.debt} ₪`}
+                          color="error"
+                          size="small"
+                          sx={{ 
+                            fontWeight: 'bold',
+                            animation: user.debt > 1000 ? 'pulse 2s infinite' : 'none',
+                            '@keyframes pulse': {
+                              '0%': { transform: 'scale(1)' },
+                              '50%': { transform: 'scale(1.05)' },
+                              '100%': { transform: 'scale(1)' }
+                            }
+                          }}
+                        />
+                      )}
+                    </Box>
                   }
                   secondary={
                     <React.Fragment>
                       <Typography 
                         component="span" 
-                        className="user-email"
+                        className="user-phone"
                         variant="body2"
                         sx={{ 
                           color: 'text.secondary',
@@ -293,17 +336,17 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
                           mb: 0.5
                         }}
                       >
-                        {user.email}
+                        {user.phone}
                       </Typography>
                       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                         <Chip
-                          icon={getRoleIcon(user.role)}
-                          label={getRoleDisplayName(user.role)}
+                          icon={getRoleIcon(user.rols)}
+                          label={getRoleDisplayName(user.rols)}
                           size="small"
-                          className={`user-role-chip ${user.role || ''}`}
+                          className={`user-role-chip ${user.rols || ''}`}
                           sx={{ 
-                            bgcolor: getRoleColor(user.role),
-                            color: theme.palette.getContrastText(getRoleColor(user.role)),
+                            bgcolor: getRoleColor(user.rols),
+                            color: theme.palette.getContrastText(getRoleColor(user.rols)),
                             transition: 'all 0.3s ease',
                             '&:hover': {
                               transform: 'translateY(-3px)',
@@ -311,14 +354,6 @@ const UserList = ({ users = [], onEditUser, onDeleteUser, loading = false }) => 
                             }
                           }}
                         />
-                        {user.synagogue && (
-                          <Chip
-                            label={user.synagogue}
-                            size="small"
-                            className="user-role-chip"
-                            variant="outlined"
-                          />
-                        )}
                       </Stack>
                     </React.Fragment>
                   }

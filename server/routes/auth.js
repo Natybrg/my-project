@@ -167,14 +167,52 @@ router.get("/users", async (req, res) => {
     if (!requesterUser || !['admin', 'gabai', 'manager'].includes(requesterUser.rols)) {
       return res.status(403).json({ message: 'אין הרשאה לפעולה זו' });
     }
+
+    console.log('User role:', requesterUser.rols);
     
-    // אם המשתמש הוא מנג'ר, הוא יכול לראות רק גבאים ומשתמשים רגילים
+    // הגדרת הרשאות צפייה לפי תפקיד
     let query = {};
-    if (requesterUser.rols === 'manager') {
-      query = { rols: { $in: ['gabai', 'user'] } };
+    if (requesterUser.rols === 'admin') {
+      query = {}; // מנהל רואה הכל
+    } else if (requesterUser.rols === 'manager') {
+      query = {}; // מנג'ר רואה הכל
+    } else if (requesterUser.rols === 'gabai') {
+      query = { rols: { $in: ['manager', 'gabai', 'user'] } }; // גבאי רואה את כולם חוץ מאדמין
     }
+
+    console.log('Query:', query);
     
-    const users = await User.find(query);
+    // מיון המשתמשים לפי תפקיד בסדר הנדרש
+    const users = await User.find(query)
+      .sort({
+        rols: 'asc',
+        firstName: 'asc' // מיון משני לפי שם פרטי
+      })
+      .collation({
+        locale: 'he', // מיון בעברית
+        strength: 2
+      })
+      .transform(docs => {
+        // מיון מותאם אישית לפי סדר התפקידים
+        const roleOrder = {
+          'admin': 1,
+          'manager': 2,
+          'gabai': 3,
+          'user': 4
+        };
+        
+        return docs.sort((a, b) => {
+          const roleA = roleOrder[a.rols] || 999;
+          const roleB = roleOrder[b.rols] || 999;
+          if (roleA !== roleB) {
+            return roleA - roleB;
+          }
+          // אם התפקידים זהים, מיין לפי שם פרטי
+          return a.firstName.localeCompare(b.firstName, 'he');
+        });
+      });
+
+    console.log('Found users:', users.length);
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
@@ -188,16 +226,44 @@ router.put("/users/:userId", async (req, res) => {
     const { userId } = req.params;
     const { firstName, fatherName, lastName, phone, password, rols = 'user' } = req.body;
 
+    // בדיקת הרשאות - רק מנהל יכול לשנות דרגות
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'אין הרשאה לפעולה זו' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const requesterUser = await User.findById(decoded.userId);
+    if (!requesterUser || !['admin', 'gabai', 'manager'].includes(requesterUser.rols)) {
+      return res.status(403).json({ message: 'אין הרשאה לפעולה זו' });
+    }
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // בדיקה אם מנסים להוריד דרגה ממנהל (כולל מניעת הורדת דרגה עצמית)
+    if (user.rols === 'admin') {
+      if (rols !== 'admin') {
+        return res.status(403).json({ message: "לא ניתן להוריד דרגה ממנהל - גם לא על ידי מנהל אחר" });
+      }
+    }
+
+    // רק מנהל יכול לשנות דרגות
+    if (user.rols !== rols && requesterUser.rols !== 'admin') {
+      return res.status(403).json({ message: "רק מנהל יכול לשנות דרגות" });
     }
 
     user.firstName = firstName;
     user.fatherName = fatherName;
     user.lastName = lastName;
     user.phone = phone;
-    user.password = password;
+    if (password) {
+      user.password = password;
+    }
     user.rols = rols;
 
     await user.save();

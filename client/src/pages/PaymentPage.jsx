@@ -5,8 +5,18 @@ import {
   Box,
   Grid,
   Button,
-  CircularProgress
+  CircularProgress,
+  Paper,
+  useTheme,
+  Tabs,
+  Tab
 } from "@mui/material";
+import { 
+  Payment as PaymentIcon, 
+  Refresh as RefreshIcon,
+  AccountBalance as AccountBalanceIcon,
+  History as HistoryIcon
+} from '@mui/icons-material';
 
 // Services
 import { 
@@ -25,6 +35,8 @@ import {
 } from "../components/payment/PaymentDialogs";
 
 const PaymentPage = () => {
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState(0);
   // State variables
   const [payments, setPayments] = useState([]);
   const [statistics, setStatistics] = useState({
@@ -360,96 +372,281 @@ const PaymentPage = () => {
     }
   };
   
+  // Handle tab change
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-      <Typography variant="h4" component="h1" align="center" mb={2}>
-        העליות שלי
-      </Typography>
-      
-      {error && (
-        <Typography color="error" align="center" mb={2}>
-          {error}
-        </Typography>
-      )}
-      
-      {/* Add refresh button */}
-      <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button 
-          variant="outlined" 
-          color="primary" 
-          onClick={refreshData}
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : null}
-          size="small"
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ 
+        mb: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 2
+      }}>
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{
+            fontWeight: 800,
+            color: theme.palette.primary.main,
+            textAlign: 'center',
+            mb: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
         >
-          רענן נתונים
-        </Button>
-      </Box>
-      
-      {loading && !updatingId ? (
-        <Box display="flex" justifyContent="center" my={3}>
-          <CircularProgress />
+          <AccountBalanceIcon sx={{ fontSize: 35 }} />
+          ניהול תשלומים
+        </Typography>
+
+        <Box sx={{ width: '100%', mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontWeight: 600,
+                py: 2
+              }
+            }}
+          >
+            <Tab 
+              label="תשלומים פעילים" 
+              icon={<PaymentIcon />} 
+              iconPosition="start"
+            />
+            <Tab 
+              label="היסטוריית תשלומים" 
+              icon={<HistoryIcon />} 
+              iconPosition="start"
+            />
+          </Tabs>
         </Box>
-      ) : (
-        <>
-          <Grid container spacing={2}>
-            {/* תצוגת סטטיסטיקות */}
-            <Grid item xs={12} md={4}>
-              <PaymentStatistics 
-                statistics={statistics}
-                onOpenBulkPayment={handleOpenBulkPayment}
-                onOpenBulkPartialPayment={handleOpenBulkPartialPayment}
-                loading={loading}
-              />
-            </Grid>
+
+        {activeTab === 0 && (
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 2,
+            flexWrap: 'wrap',
+            justifyContent: 'center'
+          }}>
+            <Button
+              variant="contained"
+              onClick={handleOpenBulkPayment}
+              startIcon={<PaymentIcon />}
+              sx={{
+                bgcolor: theme.palette.success.main,
+                '&:hover': {
+                  bgcolor: theme.palette.success.dark,
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                },
+                transition: 'all 0.3s ease',
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              תשלום מלא להכל
+            </Button>
             
-            {/* טבלת תשלומים */}
-            <Grid item xs={12} md={8}>
-              <PaymentTable 
-                payments={payments}
-                updatingId={updatingId}
-                onPaymentUpdate={handlePaymentUpdate}
-                onOpenPartialPayment={handleOpenPartialPayment}
-              />
-            </Grid>
+            <Button
+              variant="contained"
+              onClick={handleOpenBulkPartialPayment}
+              startIcon={<PaymentIcon />}
+              sx={{
+                bgcolor: theme.palette.info.main,
+                '&:hover': {
+                  bgcolor: theme.palette.info.dark,
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                },
+                transition: 'all 0.3s ease',
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              תשלום חלקי להכל
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={refreshData}
+              startIcon={<RefreshIcon />}
+              sx={{
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+                '&:hover': {
+                  borderColor: theme.palette.primary.dark,
+                  bgcolor: 'rgba(37, 99, 235, 0.05)',
+                  transform: 'translateY(-2px)'
+                },
+                transition: 'all 0.3s ease',
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              רענן נתונים
+            </Button>
+          </Box>
+        )}
+      </Box>
+
+      {error && (
+        <Paper 
+          elevation={0}
+          sx={{
+            p: 2,
+            mb: 3,
+            bgcolor: '#FEE2E2',
+            border: '1px solid #FCA5A5',
+            borderRadius: 2,
+            color: '#DC2626',
+            textAlign: 'center',
+            fontWeight: 500
+          }}
+        >
+          {error}
+        </Paper>
+      )}
+
+      {activeTab === 0 ? (
+        // תשלומים פעילים
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper 
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                bgcolor: '#ffffff',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)'
+                }
+              }}
+            >
+              <PaymentStatistics statistics={statistics} />
+            </Paper>
           </Grid>
           
-          {/* דיאלוג תשלום חלקי */}
-          <PartialPaymentDialog 
-            open={partialPaymentOpen}
-            onClose={handleClosePartialPayment}
-            onSubmit={handleSubmitPartialPayment}
-            paymentData={partialPaymentData}
-            partialAmount={partialAmount}
-            setPartialAmount={setPartialAmount}
-            partialNote={partialNote}
-            setPartialNote={setPartialNote}
-            loading={loading}
-          />
-          
-          {/* דיאלוג תשלום מלא לכל החיובים */}
-          <BulkPaymentDialog 
-            open={bulkPaymentOpen}
-            onClose={handleCloseBulkPayment}
-            onSubmit={handleSubmitBulkPayment}
-            loading={loading}
-            unpaidAmount={statistics.unpaidAmount}
-          />
-          
-          {/* דיאלוג תשלום חלקי כולל */}
-          <BulkPartialPaymentDialog 
-            open={bulkPartialPaymentOpen}
-            onClose={handleCloseBulkPartialPayment}
-            onSubmit={handleSubmitBulkPartialPayment}
-            amount={bulkPartialAmount}
-            setAmount={setBulkPartialAmount}
-            note={bulkPartialNote}
-            setNote={setBulkPartialNote}
-            loading={loading}
-            unpaidAmount={statistics.unpaidAmount}
-          />
-        </>
+          <Grid item xs={12} md={8}>
+            <Paper 
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                bgcolor: '#ffffff',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+                overflow: 'hidden'
+              }}
+            >
+              {loading ? (
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    p: 4
+                  }}
+                >
+                  <CircularProgress size={40} />
+                </Box>
+              ) : (
+                <PaymentTable
+                  payments={payments.filter(p => !p.isPaid)}
+                  onPaymentUpdate={handlePaymentUpdate}
+                  onPartialPayment={handleOpenPartialPayment}
+                  updatingId={updatingId}
+                />
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
+      ) : (
+        // היסטוריית תשלומים
+        <Paper 
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            bgcolor: '#ffffff',
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+            overflow: 'hidden'
+          }}
+        >
+          {loading ? (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                p: 4
+              }}
+            >
+              <CircularProgress size={40} />
+            </Box>
+          ) : (
+            <PaymentTable
+              payments={payments.filter(p => p.isPaid)}
+              onPaymentUpdate={handlePaymentUpdate}
+              onPartialPayment={handleOpenPartialPayment}
+              updatingId={updatingId}
+              isHistory={true}
+            />
+          )}
+        </Paper>
       )}
+
+      {/* Existing dialogs */}
+      <PartialPaymentDialog
+        open={partialPaymentOpen}
+        onClose={handleClosePartialPayment}
+        payment={partialPaymentData}
+        amount={partialAmount}
+        setAmount={setPartialAmount}
+        note={partialNote}
+        setNote={setPartialNote}
+        onSubmit={handleSubmitPartialPayment}
+        loading={loading}
+      />
+
+      <BulkPaymentDialog
+        open={bulkPaymentOpen}
+        onClose={handleCloseBulkPayment}
+        onSubmit={handleSubmitBulkPayment}
+        loading={loading}
+      />
+
+      <BulkPartialPaymentDialog
+        open={bulkPartialPaymentOpen}
+        onClose={handleCloseBulkPartialPayment}
+        amount={bulkPartialAmount}
+        setAmount={setBulkPartialAmount}
+        note={bulkPartialNote}
+        setNote={setBulkPartialNote}
+        onSubmit={handleSubmitBulkPartialPayment}
+        loading={loading}
+      />
     </Container>
   );
 };
