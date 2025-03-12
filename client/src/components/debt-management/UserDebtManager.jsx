@@ -6,7 +6,8 @@ import {
   CircularProgress, 
   Fab, 
   ButtonGroup,
-  Tooltip
+  Tooltip,
+  Snackbar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PaymentIcon from '@mui/icons-material/Payment';
@@ -43,6 +44,7 @@ const UserDebtManager = ({ userId, onClose }) => {
     unpaidAmount: 0,
     aliyotCount: 0
   });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Dialog states
   const [activeDialog, setActiveDialog] = useState(null); // 'edit', 'partial', 'new', 'bulkPayment', or null
@@ -107,12 +109,19 @@ const UserDebtManager = ({ userId, onClose }) => {
   const refreshData = async () => {
     try {
       setLoading(true);
+      console.log('Refreshing data for user:', userId);
       const data = await getUserWithDebts(userId);
+      console.log('Refreshed data received:', data);
+      
+      // Update state with new data
       setUserData(data.user);
       setDebts(data.debts);
       setStatistics(data.statistics);
       setError('');
+      
+      console.log('State updated with refreshed data');
     } catch (error) {
+      console.error('Error refreshing data:', error);
       setError(error.message || 'אירעה שגיאה בטעינת הנתונים');
     } finally {
       setLoading(false);
@@ -135,74 +144,78 @@ const UserDebtManager = ({ userId, onClose }) => {
 
   // Save edited debt
   const handleSaveDebt = async () => {
+    setLoading(true);
+    setError('');
+    
     try {
-      setLoading(true);
       const amount = parseFloat(editedAmount);
       
       if (isNaN(amount) || amount < 0) {
         setError('סכום לא תקין');
         return;
       }
+
+      // Check if the new amount is greater than the paid amount
+      const paidAmount = currentDebt.paidAmount || 0;
+      const shouldUpdatePaymentStatus = amount > paidAmount;
       
-      await updateDebtDetails(currentDebt._id, {
+      // Import and use debtService instead of direct api call
+      const debtService = await import('../../services/debtService');
+      
+      // First update the debt details
+      await debtService.updateDebtDetails(currentDebt._id, {
         amount,
         parsha: editedParsha,
         aliyaType: editedAliyaType
       });
+
+      // If the new amount is greater than what was paid, mark as unpaid
+      if (shouldUpdatePaymentStatus && currentDebt.isPaid) {
+        await debtService.updatePaymentStatus(currentDebt._id, false);
+      }
       
       setActiveDialog(null);
       await refreshData();
+      setSnackbar({
+        open: true,
+        message: 'החוב עודכן בהצלחה',
+        severity: 'success'
+      });
     } catch (error) {
+      console.error('Error updating debt:', error);
       setError(error.message || 'אירעה שגיאה בעדכון החוב');
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה בעדכון החוב',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   // Mark debt as paid
-  // In handleMarkAsPaid function
   const handleMarkAsPaid = async (debtId) => {
     try {
       setLoading(true);
       
-      // Get token
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('אין הרשאה. נא להתחבר מחדש');
-        setLoading(false);
-        return;
-      }
-      
-      // Use only one endpoint format that you know works
-      try {
-        const response = await fetch(`http://127.0.0.1:3002/aliyot/debts/${debtId}/pay`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            isPaid: true
-          })
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Payment status update failed:', errorData);
-          throw new Error(errorData.message || `Payment status update failed with status: ${response.status}`);
-        }
-      } catch (fetchError) {
-        console.error('Direct fetch payment status update failed:', fetchError);
-        
-        // If direct fetch fails, try using the API function as fallback
-        await updatePaymentStatus(debtId, true);
-      }
+      // Import and use debtService
+      const debtService = await import('../../services/debtService');
+      await debtService.updatePaymentStatus(debtId, true);
       
       await refreshData();
+      setSnackbar({
+        open: true,
+        message: 'החוב סומן כשולם בהצלחה',
+        severity: 'success'
+      });
     } catch (error) {
-      console.error('Mark as paid failed:', error);
-      setError(error.message || 'אירעה שגיאה בעדכון התשלום');
+      console.error('Error marking debt as paid:', error);
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה בסימון החוב כשולם',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -222,10 +235,11 @@ const UserDebtManager = ({ userId, onClose }) => {
   };
 
   // Save partial payment
-  // In handleSavePartialPayment function
   const handleSavePartialPayment = async () => {
+    setLoading(true);
+    setError('');
+    
     try {
-      setLoading(true);
       const amount = parseFloat(partialAmount);
       
       if (isNaN(amount) || amount <= 0) {
@@ -233,46 +247,20 @@ const UserDebtManager = ({ userId, onClose }) => {
         return;
       }
       
-      // Get token
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('אין הרשאה. נא להתחבר מחדש');
-        setLoading(false);
-        return;
-      }
-      
-      // Use only one endpoint format that you know works
-      try {
-        const response = await fetch(`http://127.0.0.1:3002/aliyot/debts/${currentDebt._id}/partial-payment`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            amount: amount,
-            note: partialNote || ''
-          })
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Payment failed:', errorData);
-          throw new Error(errorData.message || `Payment failed with status: ${response.status}`);
-        }
-      } catch (fetchError) {
-        console.error('Direct fetch payment failed:', fetchError);
-        
-        // If direct fetch fails, try using the API function as fallback
-        await makePartialPayment(currentDebt._id, amount, partialNote);
-      }
+      // Import and use debtService
+      const debtService = await import('../../services/debtService');
+      await debtService.makePartialPayment(currentDebt._id, amount, partialNote || '');
       
       setActiveDialog(null);
       await refreshData();
+      setSnackbar({
+        open: true,
+        message: 'התשלום החלקי נרשם בהצלחה',
+        severity: 'success'
+      });
     } catch (error) {
-      console.error('Payment failed:', error);
-      setError(error.message || 'אירעה שגיאה בביצוע התשלום החלקי');
+      console.error('Error making partial payment:', error);
+      setError(error.message || 'אירעה שגיאה ברישום התשלום החלקי');
     } finally {
       setLoading(false);
     }
@@ -328,8 +316,19 @@ const UserDebtManager = ({ userId, onClose }) => {
       
       setActiveDialog(null);
       await refreshData();
+      setSnackbar({
+        open: true,
+        message: 'החוב נוסף בהצלחה',
+        severity: 'success'
+      });
     } catch (error) {
+      console.error('Error adding new debt:', error);
       setError(error.message || 'אירעה שגיאה בהוספת החוב חדש');
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה בהוספת החוב חדש',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -411,9 +410,19 @@ const UserDebtManager = ({ userId, onClose }) => {
       
       setActiveDialog(null);
       await refreshData();
+      setSnackbar({
+        open: true,
+        message: 'התשלום המרוכז בוצע בהצלחה',
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Bulk payment failed:', error);
       setError(error.message || 'אירעה שגיאה בביצוע תשלום מרוכז');
+      setSnackbar({
+        open: true,
+        message: 'אירעה שגיאה בביצוע תשלום מרוכז',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -424,8 +433,29 @@ const UserDebtManager = ({ userId, onClose }) => {
     setActiveDialog(null);
   }, []);
 
+  // Handle closing the snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   // Calculate if there are any unpaid debts
   const hasUnpaidDebts = debts.some(debt => !debt.isPaid);
+
+  // New function to handle debt updated
+  const handleDebtUpdated = async (debtId, action) => {
+    console.log(`Debt ${action} triggered for ID: ${debtId}`);
+    try {
+      setLoading(true);
+      // Refresh data from server
+      await refreshData();
+      console.log('Data refreshed after debt update');
+    } catch (error) {
+      console.error(`Error after debt ${action}:`, error);
+      setError(error.message || `אירעה שגיאה לאחר ${action === 'delete' ? 'מחיקת' : 'עדכון'} החוב`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading && !userData) {
     return (
@@ -498,6 +528,7 @@ const UserDebtManager = ({ userId, onClose }) => {
             onMarkAsPaid={activeDialog ? null : handleMarkAsPaid}
             onPartialPayment={activeDialog ? null : handlePartialPayment}
             disableActions={!!activeDialog} // Disable actions if any dialog is open
+            onDebtUpdated={handleDebtUpdated}
           />
           
           <DebtStatisticsCard statistics={statistics} />
@@ -569,6 +600,22 @@ const UserDebtManager = ({ userId, onClose }) => {
           />
         </>
       )}
+      
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

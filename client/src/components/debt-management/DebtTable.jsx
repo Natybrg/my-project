@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TableContainer,
   Table,
@@ -27,7 +27,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PaymentIcon from '@mui/icons-material/Payment';
 import DeleteIcon from '@mui/icons-material/Delete'; // Add this import
 import axios from 'axios';
-import { updatePaymentStatus } from '../../services/api'; // Move the import here
+import { updatePaymentStatus, checkAuth } from '../../services/api'; // Move the import here
 import './DebtTable.css';
 
 /**
@@ -65,6 +65,22 @@ const DebtTable = ({
   const [updatingDebtId, setUpdatingDebtId] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
   const [confirmDelete, setConfirmDelete] = useState({ open: false, debt: null });
+  const [authInfo, setAuthInfo] = useState(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const fetchAuthInfo = async () => {
+      try {
+        const authData = await checkAuth();
+        console.log('Auth info:', authData);
+        setAuthInfo(authData);
+      } catch (error) {
+        console.error('Error fetching auth info:', error);
+      }
+    };
+
+    fetchAuthInfo();
+  }, []);
 
   const handleAction = (actionFn, ...args) => {
     if (!actionFn || disableActions) {
@@ -79,38 +95,78 @@ const DebtTable = ({
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
+  // Check if the user has permission to perform actions on a debt
+  const hasPermission = (debt) => {
+    if (!authInfo || !authInfo.isAuthenticated) {
+      return false;
+    }
+    
+    // Admin, gabai, and manager roles have permission to perform actions on all debts
+    if (['admin', 'gabai', 'manager'].includes(authInfo.role)) {
+      return true;
+    }
+    
+    // Regular users can only perform actions on their own debts
+    return debt.userId === authInfo.userId;
+  };
+
   // Define the handleMarkAsPaid function
   const handleMarkAsPaid = async (debt) => {
     if (!debt?._id) return;
+    
+    // Check if the user has permission
+    if (!hasPermission(debt)) {
+      setSnackbar({
+        open: true,
+        message: 'אין לך הרשאה לסמן חוב זה כשולם',
+        severity: 'error'
+      });
+      return;
+    }
 
     try {
       setUpdatingDebtId(debt._id);
-      const endpoint = `/api/debts/${debt._id}/pay`;
+      
+      // Log the debt ID being paid
+      console.log('Marking debt as paid with ID:', debt._id);
+      console.log('Current auth info:', authInfo);
+      
+      // Use the debtService instead of direct axios call
+      const response = await import('../../services/debtService')
+        .then(module => module.updatePaymentStatus(debt._id, true));
+      
+      console.log('Debt marked as paid successfully');
+      
+      setSnackbar({
+        open: true,
+        message: 'החוב סומן כשולם בהצלחה',
+        severity: 'success'
+      });
 
-      const response = await axios.put(endpoint, { isPaid: true });
-
-      if (response.status === 200) {
-        console.log('Debt marked as paid successfully');
-        
-        setSnackbar({
-          open: true,
-          message: 'החוב סומן כשולם בהצלחה',
-          severity: 'success'
-        });
-
-        if (onDebtUpdated) {
-          onDebtUpdated();
-        }
-      } else {
-        throw new Error('Unexpected response status');
+      if (onDebtUpdated) {
+        // Add a small delay to ensure the server has time to process the update
+        setTimeout(() => {
+          console.log('Triggering debt list refresh after marking as paid');
+          onDebtUpdated(debt._id, 'update');
+        }, 300);
       }
     } catch (err) {
       console.error('Failed to mark debt as paid:', err);
-      setSnackbar({
-        open: true,
-        message: 'אירעה שגיאה בסימון החוב כשולם',
-        severity: 'error'
-      });
+      
+      // Check if it's a 403 error
+      if (err.response && err.response.status === 403) {
+        setSnackbar({
+          open: true,
+          message: 'אין לך הרשאה לסמן חוב זה כשולם',
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'אירעה שגיאה בסימון החוב כשולם',
+          severity: 'error'
+        });
+      }
     } finally {
       setUpdatingDebtId(null);
     }
@@ -119,67 +175,62 @@ const DebtTable = ({
   // Define the handlePartialPayment function
   const handlePartialPayment = async (debt) => {
     if (!debt?._id) return;
-
-    try {
-      setUpdatingDebtId(debt._id);
-      const endpoint = `/api/debts/${debt._id}/partial-payment`;
-
-      const response = await axios.post(endpoint, { amount: 100 }); // Example amount
-
-      if (response.status === 200) {
-        console.log('Partial payment recorded successfully');
-        
-        setSnackbar({
-          open: true,
-          message: 'תשלום חלקי נרשם בהצלחה',
-          severity: 'success'
-        });
-
-        if (onDebtUpdated) {
-          onDebtUpdated();
-        }
-      } else {
-        throw new Error('Unexpected response status');
-      }
-    } catch (err) {
-      console.error('Failed to record partial payment:', err);
+    
+    // Check if the user has permission
+    if (!hasPermission(debt)) {
       setSnackbar({
         open: true,
-        message: 'אירעה שגיאה ברישום תשלום חלקי',
+        message: 'אין לך הרשאה לבצע תשלום חלקי לחוב זה',
         severity: 'error'
       });
-    } finally {
-      setUpdatingDebtId(null);
+      return;
+    }
+
+    // Instead of making the payment directly, call the onPartialPayment function
+    // which will open a dialog for the user to enter the amount
+    if (onPartialPayment) {
+      onPartialPayment(debt);
     }
   };
 
   const handleDeleteDebt = async (debt) => {
     if (!debt?._id) return;
+    
+    // Check if the user has permission
+    if (!hasPermission(debt)) {
+      setSnackbar({
+        open: true,
+        message: 'אין לך הרשאה למחוק חוב זה',
+        severity: 'error'
+      });
+      return;
+    }
 
     try {
       setUpdatingDebtId(debt._id);
-      const endpoint = `/api/debts/${debt._id}`;
       
-      // Log the endpoint and debt ID being called
-      console.log('Sending DELETE request to endpoint:', endpoint);
-      console.log('Debt ID:', debt._id);
+      // Log the debt ID being deleted
+      console.log('Deleting debt with ID:', debt._id);
       
-      const response = await axios.delete(endpoint);
+      // Use the debtService instead of direct axios call
+      const response = await import('../../services/debtService')
+        .then(module => module.deleteDebt(debt._id));
       
-      if (response.status === 200) {
-        console.log('Debt deleted successfully');
-        
-        setSnackbar({
-          open: true,
-          message: 'החוב נמחק בהצלחה',
-          severity: 'success'
-        });
-        
-        if (onDebtUpdated) {
-          onDebtUpdated();
-        }
-      } else {
-        throw new Error('Unexpected response status');
+      console.log('Debt deleted successfully');
+      
+      setSnackbar({
+        open: true,
+        message: 'החוב נמחק בהצלחה',
+        severity: 'success'
+      });
+      
+      // Force a refresh of the debt list
+      if (onDebtUpdated) {
+        // Add a small delay to ensure the server has time to process the deletion
+        setTimeout(() => {
+          console.log('Triggering debt list refresh after deletion');
+          onDebtUpdated(debt._id, 'delete');
+        }, 300);
       }
     } catch (err) {
       console.error('Failed to delete debt:', err);
@@ -273,15 +324,17 @@ const DebtTable = ({
                   <TableCell>
                     <Box className="action-buttons">
                       <Tooltip title="עריכה" disableInteractive>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() => handleAction(onEditDebt, debt)}
-                          disabled={disableActions || updatingDebtId === debt._id}
-                          className="action-button edit-button"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
+                        <span>
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => handleAction(onEditDebt, debt)}
+                            disabled={disableActions || updatingDebtId === debt._id}
+                            className="action-button edit-button"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                       
                       {!debt.isPaid && (
@@ -367,6 +420,9 @@ const DebtTable = ({
         onClose={handleCloseConfirmDelete}
         aria-labelledby="confirm-delete-dialog-title"
         aria-describedby="confirm-delete-dialog-description"
+        container={document.body}
+        disablePortal={false}
+        keepMounted
       >
         <DialogTitle id="confirm-delete-dialog-title">אישור מחיקה</DialogTitle>
         <DialogContent>

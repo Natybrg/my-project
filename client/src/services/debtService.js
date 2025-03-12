@@ -39,18 +39,42 @@ export const addAliyah = async (debtData) => {
 export const updatePaymentStatus = async (paymentId, isPaid) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/aliyot/payment/${paymentId}`, 
-      { isPaid },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+    
+    // Try the aliyot endpoint first
+    try {
+      console.log(`Attempting to update payment status for ID ${paymentId} using aliyot endpoint`);
+      const response = await axios.put(`${API_URL}/aliyot/payment/${paymentId}`, 
+        { isPaid },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      
+      console.log('Payment status updated successfully using aliyot endpoint');
+      return response.data;
+    } catch (aliyotError) {
+      console.error('Error updating payment status using aliyot endpoint:', aliyotError);
+      
+      // If the first endpoint fails, try the api/debts endpoint
+      console.log(`Attempting to update payment status for ID ${paymentId} using api/debts endpoint`);
+      const response = await axios.put(`${API_URL}/api/debts/${paymentId}/pay`, 
+        { isPaid },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('Payment status updated successfully using api/debts endpoint');
+      return response.data;
+    }
   } catch (error) {
-    console.error('Error updating payment status:', error);
+    console.error('Error updating payment status (both endpoints failed):', error);
     throw error;
   }
 };
@@ -59,18 +83,42 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
 export const makePartialPayment = async (paymentId, amount, note) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/aliyot/payment/${paymentId}/partial`, 
-      { amount, note },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+    
+    // Try the aliyot endpoint first
+    try {
+      console.log(`Attempting to make partial payment for ID ${paymentId} using aliyot endpoint`);
+      const response = await axios.post(`${API_URL}/aliyot/payment/${paymentId}/partial`, 
+        { amount, note },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      
+      console.log('Partial payment recorded successfully using aliyot endpoint');
+      return response.data;
+    } catch (aliyotError) {
+      console.error('Error making partial payment using aliyot endpoint:', aliyotError);
+      
+      // If the first endpoint fails, try the api/debts endpoint
+      console.log(`Attempting to make partial payment for ID ${paymentId} using api/debts endpoint`);
+      const response = await axios.post(`${API_URL}/api/debts/${paymentId}/partial-payment`, 
+        { amount, note },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('Partial payment recorded successfully using api/debts endpoint');
+      return response.data;
+    }
   } catch (error) {
-    console.error('Error making partial payment:', error);
+    console.error('Error making partial payment (both endpoints failed):', error);
     throw error;
   }
 };
@@ -115,22 +163,36 @@ export const getUserDetailsWithDebts = async (userId) => {
 export const deleteDebt = async (debtId) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/aliyot/debt/${debtId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to delete debt');
+    
+    // Try the aliyot endpoint first
+    try {
+      console.log(`Attempting to delete debt with ID ${debtId} using aliyot endpoint`);
+      const response = await axios.delete(`${API_URL}/aliyot/debt/${debtId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Debt deleted successfully using aliyot endpoint');
+      return response.data;
+    } catch (aliyotError) {
+      console.error('Error deleting debt using aliyot endpoint:', aliyotError);
+      
+      // If the first endpoint fails, try the api/debts endpoint
+      console.log(`Attempting to delete debt with ID ${debtId} using api/debts endpoint`);
+      const response = await axios.delete(`${API_URL}/api/debts/${debtId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Debt deleted successfully using api/debts endpoint');
+      return response.data;
     }
-
-    return await response.json();
   } catch (error) {
-    console.error('Error deleting debt:', error);
+    console.error('Error deleting debt (both endpoints failed):', error);
     throw error;
   }
 };

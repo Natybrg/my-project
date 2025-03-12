@@ -19,6 +19,7 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/aliyot', aliyotRoutes);
 app.use('/reminders', reminderRoutes); // הוספת נתיבי תזכורות
+app.use('/api/debts', aliyotRoutes); // Add this line to support the /api/debts endpoint
 
 // הוסף נתיב לדיבוג
 app.get('/debug/routes', (req, res) => {

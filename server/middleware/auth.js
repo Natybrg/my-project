@@ -43,11 +43,14 @@ const auth = async (req, res, next) => {
     
     // הוספת המידע על המשתמש לבקשה
     req.user = { 
-      id: decoded.userId,
-      role: decoded.role || decoded.rol  // תמיכה גם ב-role וגם ב-rol לצורך תאימות לאחור
+      id: decoded.userId || decoded.id,
+      rols: decoded.role || decoded.rol || decoded.rols  // תמיכה בכל סוגי השדות לצורך תאימות לאחור
     };
     
     console.log('User info added to request:', req.user);
+    console.log('User ID:', req.user.id);
+    console.log('User role:', req.user.rols);
+    
     next();
   } catch (error) {
     console.log('Unexpected error in auth middleware:', error.message);

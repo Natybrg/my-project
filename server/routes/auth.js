@@ -324,4 +324,22 @@ router.delete('/users/:userId', auth, verifyAdmin, async (req, res) => {
   }
 });
 
+// Check authentication status
+router.get('/check-auth', auth, async (req, res) => {
+  try {
+    console.log('Check auth request received');
+    console.log('User ID:', req.user.id);
+    console.log('User role:', req.user.rols);
+    
+    res.status(200).json({
+      isAuthenticated: true,
+      userId: req.user.id,
+      role: req.user.rols
+    });
+  } catch (error) {
+    console.error('Error checking auth:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
 module.exports = router;
