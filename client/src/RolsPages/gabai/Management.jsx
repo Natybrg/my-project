@@ -56,6 +56,7 @@ const Management = () => {
     date: new Date(),
   });
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const getRoleDisplayName = (role) => {
     switch(role) {
@@ -402,6 +403,23 @@ const Management = () => {
     return [];
   };
 
+  // Function to handle delete button click
+  const handleDeleteClick = (user) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Function to confirm deletion
+  const confirmDelete = () => {
+    // Add your delete logic here
+    setIsDeleteDialogOpen(false);
+  };
+
+  // Function to cancel deletion
+  const cancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+  };
+
   return (
     <Box sx={{ 
       p: 1,
@@ -411,7 +429,7 @@ const Management = () => {
       overflowY: 'auto',
       display: 'flex',
       flexDirection: 'column'
-    }}>
+    }} dir="rtl">
       <Typography 
         variant="h5" 
         sx={{
@@ -840,7 +858,7 @@ const Management = () => {
                   {currentUserRole === 'admin' && selectedUser.rols !== 'admin' && (
                     <IconButton 
                       color="error" 
-                      onClick={handleDeleteUser}
+                      onClick={() => handleDeleteClick(selectedUser)}
                       size="small"
                       sx={{ 
                         p: 0.5,
@@ -1314,6 +1332,23 @@ const Management = () => {
             >
               {addAliyaLoading ? <CircularProgress size={16} /> : 'שמור'}
             </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={isDeleteDialogOpen}
+          onClose={cancelDelete}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>אישור מחיקה</DialogTitle>
+          <DialogContent>
+            <Typography>האם אתה בטוח שברצונך למחוק את המשתמש {selectedUser?.firstName} {selectedUser?.lastName}?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={cancelDelete} color="primary">ביטול</Button>
+            <Button onClick={confirmDelete} color="secondary">מחק</Button>
           </DialogActions>
         </Dialog>
       </Box>

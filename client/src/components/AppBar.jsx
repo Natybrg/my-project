@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
   IconButton,
   Box,
+  Chip,
   Menu,
   MenuItem,
-  Avatar,
-  Chip
+  Avatar
 } from '@mui/material';
-import { AccountCircle, Home, Payment, Dashboard, AccessTime } from '@mui/icons-material'; // Added AccessTime icon
+import { AccountCircle, Home, Payment, Settings, Dashboard, AccessTime } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
-
-// Remove unused imports (Settings was imported but not used)
 
 const CustomAppBar = () => {
   const navigate = useNavigate();
@@ -27,95 +25,77 @@ const CustomAppBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  
-  // בדיקה אם המשתמש מחובר בטעינת הקומפוננטה
+
   useEffect(() => {
     checkUserLoggedIn();
-    
+
     // האזנה לשינויים במשתמש
     window.addEventListener('userChange', checkUserLoggedIn);
-    
+
     return () => {
       window.removeEventListener('userChange', checkUserLoggedIn);
     };
   }, []);
 
-  // פונקציה לבדיקה אם המשתמש מחובר
   const checkUserLoggedIn = () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-      const firstName = localStorage.getItem('firstName');
-      const userRole = localStorage.getItem('userRole');
-      
-      if (token && userId) {
-        setIsLoggedIn(true);
-        setUserName(firstName || 'משתמש');
-        // Check for all possible admin roles
-        setIsAdmin(['admin', 'gabai', 'manager'].includes(userRole));
-      } else {
-        setIsLoggedIn(false);
-        setUserName('אורח');
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error('Error checking user login status:', error);
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    const firstName = localStorage.getItem('firstName');
+    const userRole = localStorage.getItem('userRole');
+
+    if (token && userId) {
+      setIsLoggedIn(true);
+      setUserName(firstName || 'משתמש');
+      setIsAdmin(['admin', 'gabai', 'manager'].includes(userRole));
+    } else {
       setIsLoggedIn(false);
       setUserName('אורח');
       setIsAdmin(false);
     }
   };
 
-  // פתיחת תפריט משתמש
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  // סגירת תפריט משתמש
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
-  // פתיחת חלון התחברות
   const handleLoginOpen = () => {
     setLoginOpen(true);
   };
 
-  // סגירת חלון התחברות
   const handleLoginClose = () => {
     setLoginOpen(false);
   };
 
-  // פתיחת חלון הרשמה
   const handleSignupOpen = () => {
     setSignupOpen(true);
   };
 
-  // סגירת חלון הרשמה
   const handleSignupClose = () => {
     setSignupOpen(false);
   };
 
-  // התנתקות
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('firstName');
     localStorage.removeItem('userRole');
-    
+
     setIsLoggedIn(false);
     setUserName('אורח');
     setIsAdmin(false);
     setAnchorEl(null);
-    
+
     // פרסום אירוע שינוי משתמש
     window.dispatchEvent(new Event('userChange'));
-    
+
     // ניווט לדף הבית
     navigate('/');
   };
 
-  // ניווט לדף
   const navigateTo = (path) => {
     navigate(path);
   };
@@ -127,55 +107,59 @@ const CustomAppBar = () => {
         <Typography variant="h6" component="div">
           אתר לניהול בית כנסת
         </Typography>
-        
+
         {/* מרווח גמיש שידחוף את כפתורי הניווט למרכז */}
         <Box sx={{ flexGrow: 1 }} />
-        
+
         {/* כפתורי ניווט - עכשיו במרכז */}
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button 
-            color="inherit" 
+          <Button
+            color="inherit"
             startIcon={<Home />}
             onClick={() => navigateTo('/')}
-            sx={{ 
-              backgroundColor: location.pathname === '/' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            sx={{
+              backgroundColor:
+                location.pathname === '/' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
               '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
             }}
           >
             דף הבית
           </Button>
-          
-          <Button 
-            color="inherit" 
+
+          <Button
+            color="inherit"
             startIcon={<AccessTime />}
             onClick={() => navigateTo('/day-times')}
-            sx={{ 
-              backgroundColor: location.pathname === '/day-times' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            sx={{
+              backgroundColor:
+                location.pathname === '/day-times' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
               '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
             }}
           >
             זמני היום
           </Button>
-          
-          <Button 
-            color="inherit" 
+
+          <Button
+            color="inherit"
             startIcon={<Payment />}
             onClick={() => navigateTo('/payment')}
-            sx={{ 
-              backgroundColor: location.pathname === '/payment' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            sx={{
+              backgroundColor:
+                location.pathname === '/payment' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
               '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
             }}
           >
             תשלומים
           </Button>
-          
+
           {isAdmin && (
-            <Button 
-              color="inherit" 
+            <Button
+              color="inherit"
               startIcon={<Dashboard />}
               onClick={() => navigateTo('/admin')}
-              sx={{ 
-                backgroundColor: location.pathname.startsWith('/admin') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+              sx={{
+                backgroundColor:
+                  location.pathname.startsWith('/admin') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                 '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
               }}
             >
@@ -186,7 +170,7 @@ const CustomAppBar = () => {
 
         {/* מרווח גמיש שידחוף את אזור המשתמש לצד שמאל */}
         <Box sx={{ flexGrow: 1 }} />
-        
+
         {/* אזור משתמש - עכשיו בצד שמאל */}
         <Box>
           {isLoggedIn ? (
@@ -196,8 +180,8 @@ const CustomAppBar = () => {
                 label={userName}
                 onClick={handleMenuOpen}
                 color="default"
-                sx={{ 
-                  color: 'white', 
+                sx={{
+                  color: 'white',
                   backgroundColor: 'rgba(255, 255, 255, 0.15)',
                   '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
                 }}
@@ -208,11 +192,11 @@ const CustomAppBar = () => {
                 onClose={handleMenuClose}
                 anchorOrigin={{
                   vertical: 'bottom',
-                  horizontal: 'right',
+                  horizontal: 'right'
                 }}
                 transformOrigin={{
                   vertical: 'top',
-                  horizontal: 'right',
+                  horizontal: 'right'
                 }}
               >
                 <MenuItem onClick={() => { handleMenuClose(); navigateTo('/profile'); }}>פרופיל</MenuItem>
@@ -225,8 +209,8 @@ const CustomAppBar = () => {
               label="אורח"
               onClick={handleLoginOpen}
               color="default"
-              sx={{ 
-                color: 'white', 
+              sx={{
+                color: 'white',
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' }
               }}
@@ -234,12 +218,12 @@ const CustomAppBar = () => {
           )}
         </Box>
       </Toolbar>
-      
+
       {/* מודלים */}
       <LoginModal open={loginOpen} onClose={handleLoginClose} onSignupClick={() => { handleLoginClose(); handleSignupOpen(); }} />
-      <SignupModal 
-        open={signupOpen} 
-        onClose={handleSignupClose} 
+      <SignupModal
+        open={signupOpen}
+        onClose={handleSignupClose}
         onLoginClick={() => { handleSignupClose(); handleLoginOpen(); }}
       />
     </AppBar>
