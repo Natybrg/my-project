@@ -5,7 +5,7 @@ const theme = createTheme({
   direction: 'rtl',
   palette: {
     primary: {
-      main: '#1f1f1f',
+      main: '#1976d2',
       light: '#4791db',
       dark: '#115293',
       contrastText: '#fff',
@@ -23,6 +23,12 @@ const theme = createTheme({
     text: {
       primary: '#333333',
       secondary: '#757575',
+    },
+    success: {
+      main: 'white',
+    },
+    warning: {
+      main: 'white',
     },
   },
   typography: {

@@ -441,7 +441,7 @@ const Management = () => {
           letterSpacing: '0.5px'
         }}
       >
-        ניהול משתמשים
+        {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'משתמש'}
       </Typography>
 
       {/* Search Controls */}
