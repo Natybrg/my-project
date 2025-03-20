@@ -68,10 +68,9 @@ const HebrewCalendar = () => {
       dates.push(date);
     }
     
-    // מסדר את הימים מימין לשמאל (ראשון עד שבת)
-    const reversedDates = [...dates].reverse();
-    
-    setWeekDates(reversedDates);
+    // סידור הימים מימין לשמאל - ראשון עד שבת
+    // הערה: אין צורך להפוך את הסדר כאן כי הוא יוצג נכון ב-RTL
+    setWeekDates(dates);
   }, [selectedDay]);
 
   // טעינת תאריכים עבריים וחגים

@@ -40,16 +40,28 @@ const BulkPaymentDialog = ({
     : 'תשלום חלקי של מרוכז';
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={onClose}
       fullWidth
+      maxWidth="sm"
+      dir="rtl"
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          p: 0,
+          overflow: 'hidden'
+        }
+      }}
       disableEscapeKeyDown
       BackdropProps={{ onClick: (e) => e.stopPropagation() }}
       onClick={(e) => e.stopPropagation()}
     >
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>
+        <Typography variant="h6" component="div" fontWeight="500">
+          תשלום מרוכז
+        </Typography>
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ my: 2 }}>
           {paymentType === 'full' ? (

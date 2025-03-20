@@ -10,7 +10,7 @@ import {
   Badge
 } from '@mui/material';
 import { Notifications } from '@mui/icons-material';
-import { formatDateKey, getHebrewDayName } from './utils';
+import { formatDateKey, getHebrewDayName, formatHebrewDate } from './utils';
 
 const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, reminders }) => {
   // פונקציה לבדיקה אם יש תזכורות ביום מסוים
@@ -20,65 +20,99 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 2 }}>
-      <Grid container spacing={1}>
-        {weekDates.map((date) => {
+    <Paper elevation={0} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }} dir="rtl">
+      <Grid container>
+        {weekDates.map((date, index) => {
           const dateKey = formatDateKey(date);
-          const isSelected = formatDateKey(selectedDay) === dateKey;
           const isToday = formatDateKey(new Date()) === dateKey;
-          const hebrewDate = hebrewDates[dateKey];
+          const isSelected = formatDateKey(selectedDay) === dateKey;
+          const hebrewDate = hebrewDates[dateKey] || {};
           const holiday = holidays[dateKey];
-          const hasReminders = hasRemindersForDay(date);
+          const dayReminders = reminders.filter(reminder => formatDateKey(new Date(reminder.date)) === dateKey);
           
           return (
-            <Grid item xs={12} sm={6} md={3} lg={12/7} key={dateKey}>
-              <Card 
-                elevation={isSelected ? 6 : 1}
-                sx={{
-                  border: isToday ? '2px solid #3f51b5' : 'none',
-                  backgroundColor: isSelected ? 'rgba(63, 81, 181, 0.08)' : 'white'
+            <Grid 
+              item 
+              key={dateKey} 
+              xs 
+              onClick={() => onDaySelect(date)}
+              sx={{
+                p: 1,
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: isSelected 
+                  ? 'primary.light' 
+                  : isToday 
+                    ? 'rgba(25, 118, 210, 0.08)'
+                    : 'transparent',
+                '&:hover': {
+                  backgroundColor: isSelected 
+                    ? 'primary.light' 
+                    : 'rgba(25, 118, 210, 0.12)'
+                },
+                borderLeft: index < 6 ? '1px solid #f0f0f0' : 'none'
+              }}
+            >
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  color: isSelected ? 'primary.dark' : 'text.secondary',
+                  fontWeight: isSelected ? 'bold' : 'normal'
                 }}
               >
-                <CardActionArea onClick={() => onDaySelect(date)}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="subtitle1" component="div">
-                        {getHebrewDayName(date.getDay())}
-                      </Typography>
-                      {hasReminders && (
-                        <Badge color="secondary" variant="dot">
-                          <Notifications fontSize="small" />
-                        </Badge>
-                      )}
-                    </Box>
-                    
-                    <Typography variant="h5" component="div" sx={{ textAlign: 'center', my: 1 }}>
-                      {date.getDate()}
-                    </Typography>
-                    
-                    {hebrewDate && (
-                      <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                        {hebrewDate.split(' ').slice(0, 2).join(' ')}
-                      </Typography>
-                    )}
-                    
-                    {holiday && (
-                      <Typography 
-                        variant="body2" 
-                        color="primary" 
-                        sx={{ 
-                          textAlign: 'center', 
-                          mt: 1,
-                          fontWeight: 'bold',
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        {holiday}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+                {getHebrewDayName(date.getDay())}
+              </Typography>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  my: 1,
+                  color: isSelected ? 'primary.dark' : 'text.primary',
+                  fontWeight: isSelected ? 'bold' : 'medium'
+                }}
+              >
+                {date.getDate()}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: isSelected ? 'primary.dark' : 'text.secondary',
+                  fontSize: '0.75rem'
+                }}
+              >
+                {formatHebrewDate(hebrewDate)}
+              </Typography>
+              {holiday && (
+                <Typography 
+                  variant="body2" 
+                  color="primary" 
+                  sx={{ 
+                    mt: 0.5, 
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {holiday}
+                </Typography>
+              )}
+              {dayReminders.length > 0 && (
+                <Box 
+                  sx={{ 
+                    mt: 1,
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      bgcolor: 'success.main'
+                    }}
+                  />
+                </Box>
+              )}
             </Grid>
           );
         })}

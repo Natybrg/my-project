@@ -1128,6 +1128,7 @@ const Management = () => {
           onClose={() => setIsAddingDebt(false)}
           fullWidth={false}
           maxWidth="sm"
+          dir="rtl"
           PaperProps={{
             sx: {
               borderRadius: 4,
@@ -1140,7 +1141,6 @@ const Management = () => {
               mt: -2
             }
           }}
-          dir="rtl"
         >
           <DialogTitle sx={{ 
             display: 'flex', 
@@ -1317,6 +1317,7 @@ const Management = () => {
           onClose={cancelDelete}
           fullWidth
           maxWidth="xs"
+          dir="rtl"
         >
           <DialogTitle>אישור מחיקה</DialogTitle>
           <DialogContent>

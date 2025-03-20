@@ -14,10 +14,10 @@ export const formatDateKey = (date) => {
   return result;
 };
 
-// שאר הפונקציות נשארות ללא שינוי
-export const getHebrewDayName = (dayIndex) => {
-  const hebrewDays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-  return hebrewDays[dayIndex];
+// פונקציה להמרת מספר היום לשם היום בעברית
+export const getHebrewDayName = (dayNum) => {
+  const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  return days[dayNum];
 };
 
 // פונקציה לחישוב תחילת השבוע (יום ראשון)
@@ -68,4 +68,21 @@ export const formatTime = (timeString) => {
     console.error('Error formatting time:', error);
     return timeString;
   }
+};
+
+// פונקציה לפורמט התאריך העברי
+export const formatHebrewDate = (hebrewDate) => {
+  if (!hebrewDate || typeof hebrewDate !== 'object') return '';
+  
+  // אם זה כבר מחרוזת
+  if (typeof hebrewDate === 'string') {
+    return hebrewDate.split(' ').slice(0, 2).join(' ');
+  }
+  
+  // אם יש מבנה מסוים עם שדות
+  if (hebrewDate.date) {
+    return hebrewDate.date.split(' ').slice(0, 2).join(' ');
+  }
+  
+  return '';
 };

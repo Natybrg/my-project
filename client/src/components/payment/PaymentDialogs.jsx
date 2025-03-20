@@ -35,6 +35,7 @@ export const PartialPaymentDialog = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      dir="rtl"
       PaperProps={{
         sx: {
           borderRadius: 2,
@@ -53,7 +54,7 @@ export const PartialPaymentDialog = ({
           borderColor: 'divider'
         }}
       >
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" fontWeight={700} component="div">
           תשלום חלקי
         </Typography>
         <IconButton
@@ -183,8 +184,9 @@ export const BulkPaymentDialog = ({ open, onClose, onSubmit, loading }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
       fullWidth
+      maxWidth="sm"
+      dir="rtl"
       PaperProps={{
         sx: {
           borderRadius: 2,
@@ -193,31 +195,10 @@ export const BulkPaymentDialog = ({ open, onClose, onSubmit, loading }) => {
         }
       }}
     >
-      <DialogTitle
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <Typography variant="h6" fontWeight={700}>
-          תשלום מלא לכל החיובים
+      <DialogTitle>
+        <Typography variant="h6" component="div" fontWeight="400">
+          תשלום מרוכז
         </Typography>
-        <IconButton
-          size="small"
-          onClick={onClose}
-          sx={{
-            color: theme.palette.text.secondary,
-            '&:hover': {
-              bgcolor: theme.palette.action.hover
-            }
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
@@ -287,6 +268,7 @@ export const BulkPartialPaymentDialog = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      dir="rtl"
       PaperProps={{
         sx: {
           borderRadius: 2,
@@ -305,7 +287,7 @@ export const BulkPartialPaymentDialog = ({
           borderColor: 'divider'
         }}
       >
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" component="div" fontWeight={700}>
           תשלום חלקי לכל החיובים
         </Typography>
         <IconButton
