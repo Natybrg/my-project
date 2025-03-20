@@ -6,7 +6,7 @@ import {
   Divider, 
   CircularProgress 
 } from '@mui/material';
-import { AccessTime } from '@mui/icons-material';
+import { AccessTime, Schedule } from '@mui/icons-material';
 
 const DayTimes = ({ selectedDay, dayTimes, hebrewDate }) => {
   return (
@@ -19,11 +19,14 @@ const DayTimes = ({ selectedDay, dayTimes, hebrewDate }) => {
       {dayTimes ? (
         <Box>
           {Object.entries(dayTimes).map(([label, time]) => (
-            <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body1" fontWeight={label === 'הדלקת נרות' || label === 'הבדלה' ? 'bold' : 'normal'}>
-                {label}:
-              </Typography>
+            <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
               <Typography variant="body1" fontWeight="bold">{time || 'N/A'}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body1" fontWeight={label === 'הדלקת נרות' || label === 'הבדלה' ? 'bold' : 'normal'}>
+                  {label}
+                </Typography>
+                <Schedule sx={{ mr: 1, ml: 1, fontSize: 18, color: 'primary.main' }} />
+              </Box>
             </Box>
           ))}
         </Box>

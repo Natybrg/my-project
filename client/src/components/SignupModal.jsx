@@ -24,6 +24,18 @@ const style = {
   borderRadius: 2
 };
 
+// Add these text field styles to ensure right alignment
+const textFieldStyle = {
+  "& .MuiInputBase-input": {
+    textAlign: "right",
+  },
+  "& .MuiFormLabel-root": {
+    right: 14,
+    left: "auto",
+    transformOrigin: "right top"
+  }
+};
+
 // בקומפוננטה SignupModal, נצטרך לוודא שהפרופ onLoginClick מועבר כראוי
 const SignupModal = ({ open, onClose, onLoginClick }) => {
   const [formData, setFormData] = useState({
@@ -168,9 +180,9 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
   // Handle login click with form reset
   // בפונקציה handleLoginClick, נבדוק אם onLoginClick קיים לפני שנקרא לו
   const handleLoginClick = () => {
-    onClose(); // סגירת מודל ההרשמה
+    onClose(); // סגירת מודל הרשמה
     if (typeof onLoginClick === 'function') {
-      onLoginClick(); // פתיחת מודל ההתחברות רק אם הפונקציה קיימת
+      onLoginClick(); // פתיחת מודל התחברות רק אם הפונקציה קיימת
     }
   };
   return (
@@ -186,100 +198,142 @@ const SignupModal = ({ open, onClose, onLoginClick }) => {
           </Typography>
         )}
     <form onSubmit={handleSubmit}>
-          <TextField
-            required
-            fullWidth
-            label="שם פרטי"
-            variant="outlined"
-            margin="normal"
-            value={formData.firstName}
-            onChange={(e) => handleChange('firstName', e.target.value)}
-            error={!!errors.firstName}
-            helperText={errors.firstName}
-          />
+      <TextField
+        required
+        fullWidth
+        label="שם פרטי"
+        variant="outlined"
+        margin="normal"
+        value={formData.firstName}
+        onChange={(e) => handleChange('firstName', e.target.value)}
+        error={!!errors.firstName}
+        helperText={errors.firstName}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        label="שם האב"
+        variant="outlined"
+        margin="normal"
+        value={formData.fatherName}
+        onChange={(e) => handleChange('fatherName', e.target.value)}
+        error={!!errors.fatherName}
+        helperText={errors.fatherName}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        label="שם משפחה"
+        variant="outlined"
+        margin="normal"
+        value={formData.lastName}
+        onChange={(e) => handleChange('lastName', e.target.value)}
+        error={!!errors.lastName}
+        helperText={errors.lastName}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        label="מספר טלפון"
+        variant="outlined"
+        margin="normal"
+        value={formData.phone}
+        onChange={(e) => handleChange('phone', e.target.value)}
+        error={!!errors.phone}
+        helperText={errors.phone}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        label="סיסמה"
+        type="password"
+        variant="outlined"
+        margin="normal"
+        value={formData.password}
+        onChange={(e) => handleChange('password', e.target.value)}
+        error={!!errors.password}
+        helperText={errors.password}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        label="אימות סיסמה"
+        type="password"
+        variant="outlined"
+        margin="normal"
+        value={formData.confirmPassword}
+        onChange={(e) => handleChange('confirmPassword', e.target.value)}
+        error={!!errors.confirmPassword}
+        helperText={errors.confirmPassword}
+        InputProps={{
+          dir: "rtl",
+          style: { textAlign: 'right' }
+        }}
+        InputLabelProps={{
+          style: { right: 0, left: 'auto', transformOrigin: 'right top' }
+        }}
+      />
 
-          <TextField
-            required
-            fullWidth
-            label="שם האב"
-            variant="outlined"
-            margin="normal"
-            value={formData.fatherName}
-            onChange={(e) => handleChange('fatherName', e.target.value)}
-            error={!!errors.fatherName}
-            helperText={errors.fatherName}
-          />
+      <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
+        הירשם
+      </Button>
 
-          <TextField
-            required
-            fullWidth
-            label="שם משפחה"
-            variant="outlined"
-            margin="normal"
-            value={formData.lastName}
-            onChange={(e) => handleChange('lastName', e.target.value)}
-            error={!!errors.lastName}
-            helperText={errors.lastName}
-          />
-
-          <TextField
-            required
-            fullWidth
-            label="מספר טלפון"
-            variant="outlined"
-            margin="normal"
-            value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
-            error={!!errors.phone}
-            helperText={errors.phone}
-          />
-
-          <TextField
-            required
-            fullWidth
-            label="סיסמה"
-            type="password"
-            variant="outlined"
-            margin="normal"
-            value={formData.password}
-            onChange={(e) => handleChange('password', e.target.value)}
-            error={!!errors.password}
-            helperText={errors.password}
-          />
-
-          <TextField
-            required
-            fullWidth
-            label="אימות סיסמה"
-            type="password"
-            variant="outlined"
-            margin="normal"
-            value={formData.confirmPassword}
-            onChange={(e) => handleChange('confirmPassword', e.target.value)}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword}
-          />
-
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
-            הירשם
+      <Box sx={{ mt: 2, textAlign: 'center' }}>
+        <Typography variant="body2">
+          יש לך כבר חשבון?{' '}
+          <Button 
+            color="primary" 
+            onClick={handleLoginClick} 
+            sx={{ p: 0, minWidth: 'auto', verticalAlign: 'baseline', textTransform: 'none' }}
+          >
+            התחבר כאן
           </Button>
-
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="body2">
-              יש לך כבר חשבון?{' '}
-              <Button 
-                color="primary" 
-                onClick={handleLoginClick} 
-                sx={{ p: 0, minWidth: 'auto', verticalAlign: 'baseline', textTransform: 'none' }}
-              >
-                התחבר כאן
-              </Button>
-            </Typography>
-          </Box>
-        </form>
+        </Typography>
       </Box>
-    </Modal>
-  );
+    </form>
+  </Box>
+</Modal>
+);
 };
 
 export default SignupModal;

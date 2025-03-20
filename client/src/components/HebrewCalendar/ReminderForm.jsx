@@ -77,11 +77,19 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
     setError('');
     
     try {
-      // הכנת האובייקט לשליחה - המרת התאריך לפורמט ISO
+      // הכנת האובייקט לשליחה - המרת התאריך לפורמט ISO, שמירה על אזור הזמן המקומי
+      // ושמירה על הפורמט הנכון לתאריך ושעה
+      let dateToSave = formData.date;
+      
+      // וידוא שהתאריך הוא אובייקט dayjs
+      if (typeof dateToSave !== 'object' || !dateToSave.toISOString) {
+        dateToSave = dayjs(dateToSave);
+      }
+      
       const reminderToSave = {
         title: formData.title,
         description: formData.description,
-        date: formData.date.toISOString() // המרה ל-ISO string
+        date: dateToSave.toISOString() // המרה ל-ISO string
       };
       
       console.log('Saving reminder with date:', reminderToSave.date);
@@ -102,8 +110,16 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
   };
   
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      aria-labelledby="reminder-form-title"
+      disablePortal
+      keepMounted
+    >
+      <DialogTitle id="reminder-form-title">
         {editReminder ? 'עריכת תזכורת' : 'הוספת תזכורת חדשה'}
       </DialogTitle>
       

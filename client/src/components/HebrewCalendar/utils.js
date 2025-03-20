@@ -1,10 +1,17 @@
 // פונקציה לפורמט מפתח תאריך
 export const formatDateKey = (date) => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    console.error('Invalid date object passed to formatDateKey:', date);
+    return '';
+  }
+  
   // שימוש בתאריך מקומי במקום UTC כדי למנוע בעיות עם אזורי זמן
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  
+  const result = `${year}-${month}-${day}`;
+  return result;
 };
 
 // שאר הפונקציות נשארות ללא שינוי
@@ -24,6 +31,10 @@ export const getStartOfWeek = (date) => {
   // חישוב ההפרש בימים מיום ראשון
   const diff = result.getDate() - day;
   result.setDate(diff);
+  
+  // מכיוון שאנחנו מציגים את הימים מימין לשמאל (ראשון עד שבת)
+  // ואנחנו הופכים את הסדר בקוד אחר, אנחנו משאירים את הלוגיקה הבסיסית של
+  // מציאת יום ראשון כתחילת השבוע
   
   return result;
 };

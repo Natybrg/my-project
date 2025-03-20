@@ -68,7 +68,10 @@ const HebrewCalendar = () => {
       dates.push(date);
     }
     
-    setWeekDates(dates);
+    // מסדר את הימים מימין לשמאל (ראשון עד שבת)
+    const reversedDates = [...dates].reverse();
+    
+    setWeekDates(reversedDates);
   }, [selectedDay]);
 
   // טעינת תאריכים עבריים וחגים
@@ -100,9 +103,11 @@ const HebrewCalendar = () => {
             [formatDateKey(selectedDay)]: dayTimesData
           }));
           
-          // Fetch reminders for the current week
-          const startDate = weekDates[0];
-          const endDate = weekDates[6];
+          // Fetch reminders for the current week - שימוש בנתיבים המקוריים לפני ההיפוך
+          // מכיוון שה-API מצפה לתאריך התחלה מוקדם יותר מתאריך הסיום
+          const sortedDates = [...weekDates].sort((a, b) => a - b);
+          const startDate = sortedDates[0];
+          const endDate = sortedDates[sortedDates.length - 1];
           const remindersData = await getRemindersByDateRange(startDate, endDate);
           setReminders(remindersData);
           
@@ -159,8 +164,10 @@ const HebrewCalendar = () => {
   // פונקציה לרענון התזכורות לאחר הוספה/עדכון/מחיקה
   const refreshReminders = async () => {
     try {
-      const startDate = weekDates[0];
-      const endDate = weekDates[6];
+      // מיון התאריכים כך שתאריך ההתחלה יהיה מוקדם יותר מתאריך הסיום
+      const sortedDates = [...weekDates].sort((a, b) => a - b);
+      const startDate = sortedDates[0];
+      const endDate = sortedDates[sortedDates.length - 1];
       const remindersData = await getRemindersByDateRange(startDate, endDate);
       setReminders(remindersData);
     } catch (error) {
