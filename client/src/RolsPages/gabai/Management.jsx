@@ -688,10 +688,7 @@ const Management = () => {
                                   px: 1,
                                   py: 0
                                 },
-                                // bgcolor: user.rols === 'admin' ? 'error.light' : 
-                                        // user.rols === 'gabai' ? 'success.light' : 
-                                        // user.rols === 'manager' ? 'info.light' : 'primary.light',
-                                color: 'white',
+                                color: '#ffffff',
                                 bgcolor: user.rols === 'admin' ? 'error.dark' : 
                                       user.rols === 'gabai' ? 'success.dark' : 
                                       user.rols === 'manager' ? 'info.dark' : 'primary.dark',
@@ -810,7 +807,7 @@ const Management = () => {
                     sx={{ 
                       height: 24,
                       fontSize: '0.75rem',
-                      color: 'white',
+                      color: '#ffffff',
                       bgcolor: selectedUser.rols === 'admin' ? 'error.dark' : 
                             selectedUser.rols === 'gabai' ? 'success.dark' : 
                             selectedUser.rols === 'manager' ? 'info.dark' : 'primary.dark',
@@ -828,10 +825,9 @@ const Management = () => {
                     sx={{ 
                       p: 0.5,
                       bgcolor: 'primary.light',
-                      color: 'white',
+                      color: '#ffffff',
                       '&:hover': {
                         bgcolor: 'primary.main',
-                        
                       }
                     }}
                   >
@@ -844,10 +840,9 @@ const Management = () => {
                     sx={{ 
                       p: 0.5,
                       bgcolor: 'success.light',
-                      color: 'white',
+                      color: '#ffffff',
                       '&:hover': {
                         bgcolor: 'success.main',
-                        
                       },
                       zIndex: 1200,
                       position: 'relative'
@@ -863,7 +858,7 @@ const Management = () => {
                       sx={{ 
                         p: 0.5,
                         bgcolor: 'error.light',
-                        color: 'white',
+                        color: '#ffffff',
                         '&:hover': {
                           bgcolor: 'error.main',
                         }
@@ -972,7 +967,7 @@ const Management = () => {
                         py: 1.5,
                         borderRadius: 2,
                         bgcolor: theme.palette.primary.main,
-                        color: 'white',
+                        color: '#ffffff',
                         fontWeight: 'bold',
                         transition: 'all 0.3s ease',
                         textTransform: 'none',
@@ -1050,38 +1045,19 @@ const Management = () => {
                       }
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography 
-                        component="span" 
-                        variant="subtitle2" 
-                        color="text.secondary" 
-                        sx={{ width: 120 }}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          bgcolor: '#3b82f6',
+                          fontSize: '1.5rem'
+                        }}
                       >
-                        שם פרטי:
-                      </Typography>
-                      <Typography 
-                        component="span" 
-                        variant="body1" 
-                        fontWeight="medium"
-                      >
-                        {selectedUser.firstName}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography 
-                        component="span" 
-                        variant="subtitle2" 
-                        color="text.secondary" 
-                        sx={{ width: 120 }}
-                      >
-                        שם משפחה:
-                      </Typography>
-                      <Typography 
-                        component="span" 
-                        variant="body1" 
-                        fontWeight="medium"
-                      >
-                        {selectedUser.lastName}
+                        {selectedUser?.firstName?.[0] || ''}
+                      </Avatar>
+                      <Typography variant="h6">
+                        {selectedUser?.firstName} {selectedUser?.lastName}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -1131,7 +1107,7 @@ const Management = () => {
                         label={getRoleDisplayName(selectedUser.rols)}
                         size="small"
                         sx={{ 
-                          color: 'white',
+                          color: '#ffffff',
                           bgcolor: selectedUser.rols === 'admin' ? 'error.dark' : 
                                 selectedUser.rols === 'gabai' ? 'success.dark' : 
                                 selectedUser.rols === 'manager' ? 'info.dark' : 'primary.dark',
@@ -1171,20 +1147,20 @@ const Management = () => {
             justifyContent: 'space-between', 
             alignItems: 'flex-start',
             background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            color: 'white',
+            color: '#ffffff',
             py: 0.5,
             px: 1,
             maxWidth: '100%',
             borderBottom: '1px solid rgba(255,255,255,0.2)'
           }}>
             <Typography variant="h4" component="div" fontWeight="400" sx={{ fontSize: '0.875rem' }}>
-              הוספת חוב חדש
+              הוספת חוב חדש ל{selectedUser?.firstName} {selectedUser?.lastName}
             </Typography>
             <IconButton 
               onClick={() => setIsAddingDebt(false)}
               size="small"
               sx={{ 
-                color: 'white',
+                color: '#ffffff',
                 '&:hover': {
                   bgcolor: 'rgba(255,255,255,0.1)'
                 }

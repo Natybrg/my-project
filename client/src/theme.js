@@ -5,19 +5,19 @@ const theme = createTheme({
   direction: 'rtl',
   palette: {
     primary: {
-      main: '#1976d2',
-      light: '#4791db',
-      dark: '#115293',
-      contrastText: '#fff',
+      main: '#3b82f6',
+      light: '#60a5fa',
+      dark: '#2563eb',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#f50057',
-      light: '#ff4081',
-      dark: '#c51162',
-      contrastText: '#fff',
+      main: '#10b981',
+      light: '#34d399',
+      dark: '#059669',
+      contrastText: '#ffffff',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#f1f5f9',
       paper: '#ffffff',
     },
     text: {
@@ -25,10 +25,10 @@ const theme = createTheme({
       secondary: '#757575',
     },
     success: {
-      main: 'white',
+      main: '#22c55e',
     },
     warning: {
-      main: 'white',
+      main: '#f59e0b',
     },
   },
   typography: {
