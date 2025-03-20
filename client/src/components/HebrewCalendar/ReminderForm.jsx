@@ -8,7 +8,8 @@ import {
   Button,
   Box,
   Typography,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -112,17 +113,14 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
   return (
     <Dialog 
       open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+      onClose={onClose}
       fullWidth
-      aria-labelledby="reminder-form-title"
-      disablePortal
-      keepMounted
+      maxWidth="sm"
+      dir="rtl"
     >
-      <DialogTitle id="reminder-form-title">
+      <DialogTitle>
         {editReminder ? 'עריכת תזכורת' : 'הוספת תזכורת חדשה'}
       </DialogTitle>
-      
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -130,58 +128,69 @@ const ReminderForm = ({ open, onClose, selectedDate, editReminder = null, onSucc
           </Alert>
         )}
         
-        <Box sx={{ mt: 1 }}>
+        <Box component="form" noValidate autoComplete="off" sx={{ mt: 2 }}>
           <TextField
-            fullWidth
             label="כותרת"
+            fullWidth
+            required
             value={formData.title}
             onChange={(e) => handleChange('title', e.target.value)}
             error={!!errors.title}
             helperText={errors.title}
             margin="normal"
-            required
+            inputProps={{ dir: 'rtl' }}
+            InputProps={{ dir: 'rtl' }}
           />
           
           <TextField
-            fullWidth
             label="תיאור"
+            fullWidth
+            multiline
+            rows={4}
             value={formData.description}
             onChange={(e) => handleChange('description', e.target.value)}
             margin="normal"
-            multiline
-            rows={3}
+            inputProps={{ dir: 'rtl' }}
+            InputProps={{ dir: 'rtl' }}
           />
           
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="he">
-            <DateTimePicker
+            <DateTimePicker 
               label="תאריך ושעה"
               value={formData.date}
-              onChange={(newDate) => handleChange('date', newDate)}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  margin: "normal",
-                  required: true,
-                  error: !!errors.date,
-                  helperText: errors.date
-                }
-              }}
+              onChange={(value) => handleChange('date', value)}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  fullWidth 
+                  margin="normal" 
+                  error={!!errors.date}
+                  helperText={errors.date}
+                  inputProps={{ 
+                    ...params.inputProps,
+                    dir: 'rtl'
+                  }}
+                  InputProps={{ 
+                    ...params.InputProps,
+                    dir: 'rtl'
+                  }}
+                />
+              )}
             />
           </LocalizationProvider>
         </Box>
       </DialogContent>
-      
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button onClick={onClose} color="secondary">
           ביטול
         </Button>
         <Button 
           onClick={handleSubmit} 
           variant="contained" 
-          color="primary"
+          color="primary" 
           disabled={loading}
         >
-          {loading ? 'שומר...' : editReminder ? 'עדכן' : 'הוסף'}
+          {loading ? <CircularProgress size={24} /> : (editReminder ? 'עדכון' : 'הוספה')}
         </Button>
       </DialogActions>
     </Dialog>
