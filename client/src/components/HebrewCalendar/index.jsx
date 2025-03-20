@@ -185,8 +185,12 @@ const HebrewCalendar = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, direction: 'rtl' }}>
-      <CalendarHeader onPrevWeek={handlePrevWeek} onNextWeek={handleNextWeek} />
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }} dir="rtl">
+      <CalendarHeader 
+        selectedDate={selectedDay}
+        onPrevWeek={handlePrevWeek} 
+        onNextWeek={handleNextWeek} 
+      />
       
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>

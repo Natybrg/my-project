@@ -42,13 +42,13 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 backgroundColor: isSelected 
-                  ? 'primary.light' 
+                  ? 'primary.main'
                   : isToday 
                     ? 'rgba(25, 118, 210, 0.08)'
                     : 'transparent',
                 '&:hover': {
                   backgroundColor: isSelected 
-                    ? 'primary.light' 
+                    ? 'primary.dark'
                     : 'rgba(25, 118, 210, 0.12)'
                 },
                 borderLeft: index < 6 ? '1px solid #f0f0f0' : 'none'
@@ -57,7 +57,7 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
               <Typography 
                 variant="subtitle2" 
                 sx={{ 
-                  color: isSelected ? 'primary.dark' : 'text.secondary',
+                  color: isSelected ? '#ffffff' : 'text.secondary',
                   fontWeight: isSelected ? 'bold' : 'normal'
                 }}
               >
@@ -67,7 +67,7 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
                 variant="h5" 
                 sx={{ 
                   my: 1,
-                  color: isSelected ? 'primary.dark' : 'text.primary',
+                  color: isSelected ? '#ffffff' : 'text.primary',
                   fontWeight: isSelected ? 'bold' : 'medium'
                 }}
               >
@@ -76,7 +76,7 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
               <Typography 
                 variant="body2" 
                 sx={{ 
-                  color: isSelected ? 'primary.dark' : 'text.secondary',
+                  color: isSelected ? '#ffffff' : 'text.secondary',
                   fontSize: '0.75rem'
                 }}
               >
@@ -85,11 +85,11 @@ const WeekView = ({ weekDates, selectedDay, hebrewDates, holidays, onDaySelect, 
               {holiday && (
                 <Typography 
                   variant="body2" 
-                  color="primary" 
                   sx={{ 
                     mt: 0.5, 
                     fontSize: '0.75rem',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    color: isSelected ? '#ffffff' : 'primary.main'
                   }}
                 >
                   {holiday}
