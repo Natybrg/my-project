@@ -1,0 +1,74 @@
+.debt-row {
+  transition: background-color 0.3s ease;
+}
+
+.debt-row.paid {
+  background-color: rgba(46, 125, 50, 0.05);
+}
+
+.debt-row.paid:hover {
+  background-color: rgba(46, 125, 50, 0.1);
+}
+
+.debt-row.unpaid:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.debt-row.status-updated {
+  animation: statusUpdate 0.5s ease;
+}
+
+.debt-amount {
+  font-weight: 600 !important;
+  transition: color 0.3s ease;
+}
+
+.debt-amount.paid {
+  color: #2e7d32;
+  text-decoration: line-through;
+}
+
+.debt-amount.unpaid {
+  color: #c62828;
+}
+
+.debt-status-chip {
+  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+}
+
+.debt-status-chip.paid {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.debt-status-chip.unpaid {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.payment-history-item {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.payment-history-item:last-child {
+  border-bottom: none;
+}
+
+.payment-date {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.85rem;
+}
+
+.payment-amount {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+/* אנימציה לעדכון סטטוס */
+@keyframes statusUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}

@@ -1,0 +1,343 @@
+/* עיצוב כללי לטבלה */
+.debt-table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.debt-table-container:hover {
+  box-shadow: 0 8px 30px rgba(25, 118, 210, 0.15);
+  transform: translateY(-2px);
+}
+
+.debt-table {
+  min-width: 650px;
+}
+
+/* עיצוב כותרות הטבלה */
+.table-header {
+  background-color: #f5f7fa;
+  color: #1a3b6e;
+  font-weight: 700 !important;
+  padding: 16px 12px !important;
+  border-bottom: 2px solid rgba(25, 118, 210, 0.2) !important;
+  text-align: center !important;
+  font-size: 0.95rem !important;
+  white-space: nowrap;
+}
+
+/* עיצוב שורות הטבלה */
+.debt-table tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.debt-table tbody tr:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+  transform: translateX(-4px);
+}
+
+.debt-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* עיצוב תאים בטבלה */
+.debt-table tbody td {
+  padding: 14px 12px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-size: 0.95rem !important;
+}
+
+/* עיצוב שורות ששולמו */
+.paid-row {
+  background-color: rgba(46, 125, 50, 0.05) !important;
+}
+
+.paid-row:hover {
+  background-color: rgba(46, 125, 50, 0.1) !important;
+}
+
+/* עיצוב תאי סכומים */
+.amount-cell {
+  font-weight: 600 !important;
+  color: #1a3b6e !important;
+}
+
+.paid-amount-cell {
+  font-weight: 600 !important;
+  color: #2e7d32 !important;
+}
+
+.remaining-amount-cell {
+  font-weight: 600 !important;
+  color: #c62828 !important;
+}
+
+/* עיצוב צ'יפים של סוגי עלייה */
+.aliya-type-chip {
+  font-weight: 600 !important;
+  padding: 4px 8px !important;
+  border-radius: 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.aliya-type-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.aliya-type-chip.cohen {
+  background-color: #e3f2fd !important;
+  color: #0d47a1 !important;
+}
+
+.aliya-type-chip.levi {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.aliya-type-chip.shlishi {
+  background-color: #fff8e1 !important;
+  color: #ff8f00 !important;
+}
+
+.aliya-type-chip.rvii {
+  background-color: #f3e5f5 !important;
+  color: #6a1b9a !important;
+}
+
+.aliya-type-chip.maftir {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.aliya-type-chip.hosafa {
+  background-color: #e0f7fa !important;
+  color: #00838f !important;
+}
+
+/* עיצוב צ'יפ סטטוס */
+.status-chip {
+  font-weight: 600 !important;
+  padding: 4px 12px !important;
+  border-radius: 16px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.status-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* עיצוב כפתורי פעולה */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-button {
+  transition: all 0.3s ease !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.action-button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.edit-button:hover {
+  background-color: rgba(25, 118, 210, 0.1) !important;
+}
+
+.paid-button:hover {
+  background-color: rgba(46, 125, 50, 0.1) !important;
+}
+
+.partial-button:hover {
+  background-color: rgba(156, 39, 176, 0.1) !important;
+}
+
+/* עיצוב תא טעינה */
+.loading-cell {
+  padding: 40px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.loading-text {
+  color: rgba(0, 0, 0, 0.6) !important;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* עיצוב תא ריק */
+.empty-cell {
+  padding: 40px !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+  font-style: italic !important;
+}
+
+/* אנימציות */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.debt-table-container {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* התאמה למסכים קטנים */
+@media (max-width: 768px) {
+  .debt-table {
+    min-width: 500px;
+  }
+  
+  .table-header, .debt-table tbody td {
+    padding: 12px 8px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .debt-table tbody tr:hover {
+    transform: none;
+  }
+}
+
+/* אפקט הדגשה לשורה נבחרת */
+.debt-table tbody tr.selected-row {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+  box-shadow: inset 0 0 0 1px rgba(25, 118, 210, 0.2);
+}
+
+/* אפקט לעדכון סטטוס */
+@keyframes statusUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.status-updated {
+  animation: statusUpdate 0.5s ease;
+}
+
+/* עיצוב לסיכום חובות */
+.debt-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.debt-summary-card {
+  flex: 1;
+  min-width: 200px;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.debt-summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.debt-summary-card.total {
+  background: linear-gradient(to bottom right, #e3f2fd, #bbdefb);
+  border-left: 4px solid #1976d2;
+}
+
+.debt-summary-card.paid {
+  background: linear-gradient(to bottom right, #e8f5e9, #c8e6c9);
+  border-left: 4px solid #2e7d32;
+}
+
+.debt-summary-card.unpaid {
+  background: linear-gradient(to bottom right, #ffebee, #ffcdd2);
+  border-left: 4px solid #c62828;
+}
+
+.debt-summary-value {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  margin-top: 8px !important;
+}
+
+.debt-summary-label {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem !important;
+}
+
+.status-chip.overpaid {
+  background-color: #e1f5fe !important;
+  color: #0277bd !important;
+}
+
+.status-chip.partial {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+}
+
+.status-chip.unpaid {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.status-chip.paid {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+/* עיצוב לסטטוס החזר */
+.status-chip.refund {
+  background-color: #e8eaf6 !important;
+  color: #3f51b5 !important;
+}
+
+/* עיצוב לשורות עם החזר */
+.refund-row {
+  background-color: rgba(63, 81, 181, 0.05) !important;
+}
+
+.refund-row:hover {
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+/* עיצוב לסכום החזר */
+.refund-amount-cell {
+  font-weight: 600 !important;
+  color: #3f51b5 !important;
+}
+
+/* אנימציה לעדכון תשלום */
+@keyframes paymentUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); background-color: rgba(46, 125, 50, 0.2); }
+  100% { transform: scale(1); }
+}
+
+.payment-updated {
+  animation: paymentUpdate 0.8s ease;
+}
