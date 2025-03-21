@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Box, Grid, Typography } from '@mui/material';
+import { Container, Box, Grid, Typography, Snackbar, Alert } from '@mui/material';
 import { WbSunny as SunIcon, Opacity as OpacityIcon } from '@mui/icons-material';
 import SynagogueMap from '../components/map/SynagogueMap';
 import SynagogueInfo from '../components/synagogue/SynagogueInfo';
@@ -8,6 +8,13 @@ import RemindersList from '../components/reminders/RemindersList';
 import UserDebts from '../components/debts/UserDebts';
 import { formatDateKey } from '../components/HebrewCalendar/utils';
 import { getRemindersByDateRange } from '../services/reminderService';
+import {
+  updateSynagogueData,
+  updateGalleryImages,
+  updateGallerySettings,
+  updateSynagogueLocation,
+  updateOpeningHours
+} from '../services/api';
 
 const HomePage = () => {
   const [synagogueData, setSynagogueData] = useState({
@@ -50,13 +57,59 @@ const HomePage = () => {
   const [synagogueLocation, setSynagogueLocation] = useState({ lat: 31.7767, lng: 35.2345 });
   const [synagogueAddress, setSynagogueAddress] = useState('');
   const [openingHours, setOpeningHours] = useState({});
-  const isAdmin = true; // TODO: Get from auth context
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const handleSynagogueDataUpdate = (newData) => {
-    setSynagogueData(prev => ({
-      ...prev,
-      ...newData
-    }));
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  useEffect(() => {
+    // Check user role when component mounts and on user changes
+    const checkUserRole = () => {
+      const userRole = localStorage.getItem('userRole');
+      // Only admin, manager, and gabai can edit
+      setIsAdmin(['admin', 'manager', 'gabai'].includes(userRole));
+    };
+
+    checkUserRole();
+    window.addEventListener('userChange', checkUserRole);
+
+    return () => {
+      window.removeEventListener('userChange', checkUserRole);
+    };
+  }, []);
+
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  const showMessage = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  const handleSynagogueDataUpdate = async (newData) => {
+    if (!isAdmin) {
+      showMessage('אין לך הרשאה לעדכן את פרטי בית הכנסת', 'error');
+      return;
+    }
+
+    try {
+      await updateSynagogueData(newData);
+      setSynagogueData(prev => ({
+        ...prev,
+        ...newData
+      }));
+      showMessage('פרטי בית הכנסת עודכנו בהצלחה');
+    } catch (error) {
+      console.error('Error updating synagogue data:', error);
+      showMessage('אירעה שגיאה בעדכון פרטי בית הכנסת', 'error');
+    }
   };
 
   const handleAddressChange = (newAddress) => {
@@ -67,47 +120,67 @@ const HomePage = () => {
   };
 
   const handleGalleryImagesUpdate = async (newImages) => {
+    if (!isAdmin) {
+      showMessage('אין לך הרשאה לעדכן את גלריית התמונות', 'error');
+      return;
+    }
+
     try {
-      // TODO: כאן יש להוסיף קריאת API לעדכון התמונות בשרת
-      // const response = await fetch('/api/gallery/images', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(newImages)
-      // });
-      // if (!response.ok) throw new Error('Failed to update gallery images');
-      
+      await updateGalleryImages(newImages);
       setGalleryImages(newImages);
+      showMessage('גלריית התמונות עודכנה בהצלחה');
     } catch (error) {
       console.error('Error updating gallery images:', error);
-      // TODO: הוסף הודעת שגיאה למשתמש
+      showMessage('אירעה שגיאה בעדכון גלריית התמונות', 'error');
     }
   };
 
   const handleGallerySettingsUpdate = async (newSettings) => {
+    if (!isAdmin) {
+      showMessage('אין לך הרשאה לעדכן את הגדרות הגלריה', 'error');
+      return;
+    }
+
     try {
-      // TODO: כאן יש להוסיף קריאת API לעדכון ההגדרות בשרת
-      // const response = await fetch('/api/gallery/settings', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(newSettings)
-      // });
-      // if (!response.ok) throw new Error('Failed to update gallery settings');
-      
+      await updateGallerySettings(newSettings);
       setGallerySettings(newSettings);
+      showMessage('הגדרות הגלריה עודכנו בהצלחה');
     } catch (error) {
       console.error('Error updating gallery settings:', error);
-      // TODO: הוסף הודעת שגיאה למשתמש
+      showMessage('אירעה שגיאה בעדכון הגדרות הגלריה', 'error');
     }
   };
 
-  const handleLocationChange = (newLocation) => {
-    setSynagogueLocation(newLocation);
-    // TODO: Save to backend
+  const handleLocationChange = async (newLocation) => {
+    if (!isAdmin) {
+      showMessage('אין לך הרשאה לעדכן את מיקום בית הכנסת', 'error');
+      return;
+    }
+
+    try {
+      await updateSynagogueLocation(newLocation);
+      setSynagogueLocation(newLocation);
+      showMessage('מיקום בית הכנסת עודכן בהצלחה');
+    } catch (error) {
+      console.error('Error updating location:', error);
+      showMessage('אירעה שגיאה בעדכון מיקום בית הכנסת', 'error');
+    }
   };
 
-  const handleOpeningHoursChange = (newHours) => {
-    setOpeningHours(newHours);
-    // TODO: Save to backend
+  const handleOpeningHoursChange = async (newHours) => {
+    if (!isAdmin) {
+      showMessage('אין לך הרשאה לעדכן את שעות הפתיחה', 'error');
+      return;
+    }
+
+    try {
+      await updateOpeningHours(newHours);
+      setOpeningHours(newHours);
+      showMessage('שעות הפתיחה עודכנו בהצלחה');
+    } catch (error) {
+      console.error('Error updating opening hours:', error);
+      showMessage('אירעה שגיאה בעדכון שעות הפתיחה', 'error');
+    }
   };
 
   // טעינת תזכורות מהשרת
@@ -163,7 +236,7 @@ const HomePage = () => {
           </Typography>
           <SynagogueInfo 
             synagogueData={synagogueData}
-            isAdmin={true}
+            isAdmin={isAdmin}
             onSave={handleSynagogueDataUpdate}
           />
         </Box>
@@ -174,7 +247,7 @@ const HomePage = () => {
             images={galleryImages}
             autoPlay={gallerySettings.autoPlay}
             interval={gallerySettings.interval}
-            isAdmin={true}
+            isAdmin={isAdmin}
             onImagesUpdate={handleGalleryImagesUpdate}
             onSettingsUpdate={handleGallerySettingsUpdate}
           />
@@ -271,6 +344,21 @@ const HomePage = () => {
           </Grid>
         </Container>
       </Box>
+
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

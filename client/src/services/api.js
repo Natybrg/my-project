@@ -249,4 +249,55 @@ export const checkAuth = async () => {
   }
 };
 
+// Synagogue Data API endpoints
+export const updateSynagogueData = async (data) => {
+  try {
+    const response = await api.put('/synagogue/info', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating synagogue data:', error);
+    throw error;
+  }
+};
+
+export const updateGalleryImages = async (images) => {
+  try {
+    const response = await api.put('/synagogue/gallery/images', images);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating gallery images:', error);
+    throw error;
+  }
+};
+
+export const updateGallerySettings = async (settings) => {
+  try {
+    const response = await api.put('/synagogue/gallery/settings', settings);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating gallery settings:', error);
+    throw error;
+  }
+};
+
+export const updateSynagogueLocation = async (location) => {
+  try {
+    const response = await api.put('/synagogue/location', location);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating synagogue location:', error);
+    throw error;
+  }
+};
+
+export const updateOpeningHours = async (hours) => {
+  try {
+    const response = await api.put('/synagogue/hours', hours);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating opening hours:', error);
+    throw error;
+  }
+};
+
 export default api;

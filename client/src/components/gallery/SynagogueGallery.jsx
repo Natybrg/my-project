@@ -8,17 +8,8 @@ import {
   DialogActions,
   Button,
   TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Switch,
-  FormControlLabel,
   Typography,
   Paper,
-  ImageList,
-  ImageListItem,
-  ImageListItemBar
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -26,7 +17,8 @@ import {
   Add as AddIcon,
   NavigateBefore as PrevIcon,
   NavigateNext as NextIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  PhotoCamera as PhotoIcon
 } from '@mui/icons-material';
 
 const SynagogueGallery = ({
@@ -35,27 +27,21 @@ const SynagogueGallery = ({
   interval = 5000,
   isAdmin = false,
   onImagesUpdate,
-  onSettingsUpdate
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [editedImages, setEditedImages] = useState(images);
-  const [settings, setSettings] = useState({
-    autoPlay,
-    interval
-  });
 
   // טיימר למעבר אוטומטי
   React.useEffect(() => {
     let timer;
-    if (settings.autoPlay && images.length > 1) {
+    if (autoPlay && images.length > 1) {
       timer = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % images.length);
-      }, settings.interval);
+      }, interval);
     }
     return () => clearInterval(timer);
-  }, [settings.autoPlay, settings.interval, images.length]);
+  }, [autoPlay, interval, images.length]);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -70,10 +56,6 @@ const SynagogueGallery = ({
     setIsEditDialogOpen(true);
   };
 
-  const handleSettingsClick = () => {
-    setIsSettingsDialogOpen(true);
-  };
-
   const handleImageChange = (index, field, value) => {
     const newImages = [...editedImages];
     newImages[index] = { ...newImages[index], [field]: value };
@@ -83,7 +65,7 @@ const SynagogueGallery = ({
   const handleAddImage = () => {
     setEditedImages([
       ...editedImages,
-      { id: Date.now(), url: '', caption: '' }
+      { id: Date.now(), url: '', caption: '', credit: '' }
     ]);
   };
 
@@ -97,22 +79,34 @@ const SynagogueGallery = ({
     setIsEditDialogOpen(false);
   };
 
-  const handleSaveSettings = () => {
-    onSettingsUpdate?.(settings);
-    setIsSettingsDialogOpen(false);
-  };
-
   return (
-    <Paper elevation={0} sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden' }}>
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        position: 'relative', 
+        borderRadius: 3,
+        overflow: 'hidden',
+        height: 400,
+        bgcolor: 'background.paper',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
+          transform: 'translateY(-4px)'
+        }
+      }}
+    >
       {/* תצוגת הגלריה */}
       <Box
         sx={{
           position: 'relative',
-          height: 400,
+          height: '100%',
+          width: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          bgcolor: '#000'
         }}
       >
         {images.length > 0 ? (
@@ -124,8 +118,8 @@ const SynagogueGallery = ({
               sx={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
-                transition: 'opacity 0.5s ease-in-out'
+                objectFit: 'contain',
+                transition: 'all 0.5s ease-in-out'
               }}
             />
             <Box
@@ -134,20 +128,35 @@ const SynagogueGallery = ({
                 bottom: 0,
                 left: 0,
                 right: 0,
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
                 color: 'white',
-                p: 2
+                p: 3,
+                transition: 'all 0.3s ease',
               }}
             >
-              <Typography variant="body1">
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
                 {images[currentIndex].caption}
               </Typography>
+              {images[currentIndex].credit && (
+                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                  צילום: {images[currentIndex].credit}
+                </Typography>
+              )}
             </Box>
           </>
         ) : (
-          <Typography variant="body1" color="text.secondary">
-            אין תמונות בגלריה
-          </Typography>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            color: 'text.secondary',
+            p: 4
+          }}>
+            <PhotoIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+            <Typography variant="body1">
+              אין תמונות בגלריה
+            </Typography>
+          </Box>
         )}
 
         {/* כפתורי ניווט */}
@@ -156,10 +165,15 @@ const SynagogueGallery = ({
             <IconButton
               sx={{
                 position: 'absolute',
-                left: 8,
+                left: 16,
                 color: 'white',
                 bgcolor: 'rgba(0, 0, 0, 0.3)',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
+                backdropFilter: 'blur(4px)',
+                '&:hover': { 
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  transform: 'scale(1.1)'
+                },
+                transition: 'all 0.3s ease'
               }}
               onClick={handlePrev}
             >
@@ -168,10 +182,15 @@ const SynagogueGallery = ({
             <IconButton
               sx={{
                 position: 'absolute',
-                right: 8,
+                right: 16,
                 color: 'white',
                 bgcolor: 'rgba(0, 0, 0, 0.3)',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.5)' }
+                backdropFilter: 'blur(4px)',
+                '&:hover': { 
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  transform: 'scale(1.1)'
+                },
+                transition: 'all 0.3s ease'
               }}
               onClick={handleNext}
             >
@@ -182,16 +201,24 @@ const SynagogueGallery = ({
 
         {/* כפתורי עריכה למנהל */}
         {isAdmin && (
-          <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
-            <IconButton
-              onClick={handleSettingsClick}
-              sx={{ bgcolor: 'rgba(255, 255, 255, 0.8)' }}
-            >
-              <SettingsIcon />
-            </IconButton>
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 16, 
+            right: 16, 
+            display: 'flex', 
+            gap: 1 
+          }}>
             <IconButton
               onClick={handleEditClick}
-              sx={{ bgcolor: 'rgba(255, 255, 255, 0.8)' }}
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(4px)',
+                '&:hover': { 
+                  bgcolor: 'rgba(255, 255, 255, 1)',
+                  transform: 'scale(1.1)'
+                },
+                transition: 'all 0.3s ease'
+              }}
             >
               <EditIcon />
             </IconButton>
@@ -205,86 +232,99 @@ const SynagogueGallery = ({
         onClose={() => setIsEditDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden'
+          }
+        }}
       >
-        <DialogTitle>עריכת גלריית תמונות</DialogTitle>
-        <DialogContent>
-          <List>
-            {editedImages.map((image, index) => (
-              <ListItem key={image.id} divider>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
-                  <TextField
-                    label="כתובת URL של התמונה"
-                    fullWidth
-                    value={image.url}
-                    onChange={(e) => handleImageChange(index, 'url', e.target.value)}
-                  />
-                  <TextField
-                    label="כיתוב התמונה"
-                    fullWidth
-                    value={image.caption}
-                    onChange={(e) => handleImageChange(index, 'caption', e.target.value)}
-                  />
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <IconButton
-                      edge="end"
-                      color="error"
-                      onClick={() => handleDeleteImage(index)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
+        <DialogTitle sx={{ 
+          bgcolor: 'background.default',
+          py: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}>
+          <Typography variant="h6" fontWeight={600}>
+            עריכת גלריית תמונות
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          {editedImages.map((image, index) => (
+            <Box
+              key={image.id}
+              sx={{
+                mb: 3,
+                p: 3,
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.default'
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <TextField
+                  label="כתובת URL של התמונה"
+                  fullWidth
+                  value={image.url}
+                  onChange={(e) => handleImageChange(index, 'url', e.target.value)}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() => handleDeleteImage(index)}
+                  sx={{
+                    alignSelf: 'center',
+                    '&:hover': { transform: 'scale(1.1)' },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+              <TextField
+                label="כיתוב התמונה"
+                fullWidth
+                value={image.caption}
+                onChange={(e) => handleImageChange(index, 'caption', e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                label="קרדיט לצלם"
+                fullWidth
+                value={image.credit}
+                onChange={(e) => handleImageChange(index, 'credit', e.target.value)}
+              />
+            </Box>
+          ))}
           <Button
             startIcon={<AddIcon />}
             onClick={handleAddImage}
-            sx={{ mt: 2 }}
+            sx={{
+              mt: 2,
+              '&:hover': { transform: 'translateY(-2px)' },
+              transition: 'all 0.3s ease'
+            }}
           >
             הוסף תמונה
           </Button>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ 
+          p: 2,
+          bgcolor: 'background.default',
+          borderTop: '1px solid',
+          borderColor: 'divider'
+        }}>
           <Button onClick={() => setIsEditDialogOpen(false)}>ביטול</Button>
-          <Button onClick={handleSaveImages} variant="contained">
+          <Button 
+            onClick={handleSaveImages} 
+            variant="contained"
+            sx={{
+              px: 3,
+              '&:hover': { transform: 'translateY(-2px)' },
+              transition: 'all 0.3s ease'
+            }}
+          >
             שמור שינויים
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* דיאלוג הגדרות */}
-      <Dialog
-        open={isSettingsDialogOpen}
-        onClose={() => setIsSettingsDialogOpen(false)}
-      >
-        <DialogTitle>הגדרות גלריה</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.autoPlay}
-                  onChange={(e) => setSettings(prev => ({ ...prev, autoPlay: e.target.checked }))}
-                />
-              }
-              label="מעבר אוטומטי בין תמונות"
-            />
-            {settings.autoPlay && (
-              <TextField
-                label="זמן מעבר (באלפיות שנייה)"
-                type="number"
-                value={settings.interval}
-                onChange={(e) => setSettings(prev => ({ ...prev, interval: Number(e.target.value) }))}
-                inputProps={{ min: 1000, step: 500 }}
-              />
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsSettingsDialogOpen(false)}>ביטול</Button>
-          <Button onClick={handleSaveSettings} variant="contained">
-            שמור הגדרות
           </Button>
         </DialogActions>
       </Dialog>

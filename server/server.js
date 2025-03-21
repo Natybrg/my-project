@@ -6,6 +6,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const aliyotRoutes = require('./routes/aliyot');
 const reminderRoutes = require('./routes/reminders'); // הוספת נתיבי תזכורות
+const synagogueRoutes = require('./routes/synagogue');
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '.env') });
@@ -20,6 +21,7 @@ app.use('/auth', authRoutes);
 app.use('/aliyot', aliyotRoutes);
 app.use('/reminders', reminderRoutes); // הוספת נתיבי תזכורות
 app.use('/api/debts', aliyotRoutes); // Add this line to support the /api/debts endpoint
+app.use('/api/aliyot', aliyotRoutes);
 
 // הוסף נתיב לדיבוג
 app.get('/debug/routes', (req, res) => {

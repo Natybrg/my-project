@@ -21,7 +21,8 @@ import {
   FormControl,
   InputLabel,
   Alert,
-  Snackbar
+  Snackbar,
+  Fade
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -32,7 +33,9 @@ import {
   DirectionsCar as CarIcon,
   Schedule as ScheduleIcon,
   MyLocation as MyLocationIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Place as PlaceIcon,
+  Synagogue as SynagogueIcon
 } from '@mui/icons-material';
 
 const DAYS = [
@@ -64,6 +67,7 @@ const SynagogueMap = ({
   const [tempAddress, setTempAddress] = useState(address);
   const [selectedDay, setSelectedDay] = useState(getCurrentDayId());
   const [locationError, setLocationError] = useState('');
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   function getCurrentDayId() {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -201,11 +205,11 @@ const SynagogueMap = ({
         elevation={0}
         sx={{
           p: 3,
-          borderRadius: 2,
+          borderRadius: 3,
           bgcolor: '#ffffff',
           border: '1px solid',
           borderColor: 'divider',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          boxShadow: theme.shadows[2],
           textAlign: 'center'
         }}
       >
@@ -221,13 +225,17 @@ const SynagogueMap = ({
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 2,
+          borderRadius: 3,
           bgcolor: '#ffffff',
           border: '1px solid',
           borderColor: 'divider',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          boxShadow: theme.shadows[2],
           overflow: 'hidden',
-          width: '100%'
+          width: '100%',
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            boxShadow: theme.shadows[4]
+          }
         }}
       >
         {/* Map Header */}
@@ -238,11 +246,13 @@ const SynagogueMap = ({
             borderColor: 'divider',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            color: 'white'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocationIcon color="primary" />
+            <SynagogueIcon sx={{ fontSize: 28 }} />
             <Typography variant="h6" component="div" fontWeight={700}>
               מיקום בית הכנסת
             </Typography>
@@ -255,10 +265,13 @@ const SynagogueMap = ({
                     size="small"
                     onClick={handleLocationDialogOpen}
                     sx={{ 
-                      bgcolor: theme.palette.grey[100],
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      color: 'white',
                       '&:hover': {
-                        bgcolor: theme.palette.grey[200]
-                      }
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        transform: 'scale(1.1)'
+                      },
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <MyLocationIcon />
@@ -269,10 +282,13 @@ const SynagogueMap = ({
                     size="small"
                     onClick={handleHoursDialogOpen}
                     sx={{ 
-                      bgcolor: theme.palette.grey[100],
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      color: 'white',
                       '&:hover': {
-                        bgcolor: theme.palette.grey[200]
-                      }
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        transform: 'scale(1.1)'
+                      },
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <ScheduleIcon />
@@ -285,11 +301,13 @@ const SynagogueMap = ({
                 size="small" 
                 onClick={handleNavigationClick}
                 sx={{ 
-                  bgcolor: theme.palette.primary.main,
+                  bgcolor: 'rgba(255,255,255,0.2)',
                   color: 'white',
                   '&:hover': {
-                    bgcolor: theme.palette.primary.dark
-                  }
+                    bgcolor: 'rgba(255,255,255,0.3)',
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <NavigationIcon />
@@ -299,17 +317,36 @@ const SynagogueMap = ({
         </Box>
 
         {/* Location Details */}
-        <Box sx={{ p: 2, bgcolor: theme.palette.grey[50] }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Box sx={{ p: 3, bgcolor: theme.palette.grey[50] }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2, 
+            mb: 2,
+            p: 2,
+            borderRadius: 2,
+            bgcolor: 'white',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}>
+            <PlaceIcon color="primary" />
             <Typography variant="body1" fontWeight={500}>
-              {formatAddress()}
+              {formatAddress() || 'כתובת לא הוגדרה'}
             </Typography>
           </Box>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ ml: 1 }}>
             שעות פתיחה:
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-            <FormControl sx={{ minWidth: 120 }}>
+            <FormControl 
+              sx={{ 
+                minWidth: 120,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  bgcolor: 'white'
+                }
+              }}
+            >
               <Select
                 value={selectedDay}
                 onChange={(e) => setSelectedDay(e.target.value)}
@@ -325,10 +362,11 @@ const SynagogueMap = ({
             <Box 
               sx={{ 
                 p: 2,
-                borderRadius: 1,
+                borderRadius: 2,
                 bgcolor: `${DAYS.find(d => d.id === selectedDay)?.color}15`,
                 border: `1px solid ${DAYS.find(d => d.id === selectedDay)?.color}40`,
-                flexGrow: 1
+                flexGrow: 1,
+                transition: 'all 0.3s ease'
               }}
             >
               <Typography variant="body2" sx={{ color: DAYS.find(d => d.id === selectedDay)?.color, fontWeight: 600, mb: 1 }}>
@@ -349,16 +387,38 @@ const SynagogueMap = ({
             width: '100%',
             height: '400px',
             position: 'relative',
+            overflow: 'hidden'
           }}
         >
+          <Fade in={!mapLoaded}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: theme.palette.grey[100],
+                zIndex: 1
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                טוען מפה...
+              </Typography>
+            </Box>
+          </Fade>
           <iframe
             title="synagogue-location"
             width="100%"
             height="100%"
             frameBorder="0"
             style={{ border: 0 }}
-            src={`https://maps.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed&hl=he`}
+            src={`https://maps.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed&hl=he&markers=icon:https://maps.google.com/mapfiles/kml/shapes/synagogue.png|${location.lat},${location.lng}`}
             allowFullScreen
+            onLoad={() => setMapLoaded(true)}
           />
         </Box>
       </Paper>
@@ -368,21 +428,48 @@ const SynagogueMap = ({
         anchorEl={navigationMenuAnchor}
         open={Boolean(navigationMenuAnchor)}
         onClose={handleNavigationClose}
+        TransitionComponent={Fade}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: 1,
+            borderRadius: 2,
+            minWidth: 200
+          }
+        }}
       >
-        <MenuItem onClick={() => handleNavigate('walking')}>
-          <WalkIcon sx={{ mr: 1 }} /> ניווט ברגל
+        <MenuItem onClick={() => handleNavigate('walking')} sx={{ py: 1.5 }}>
+          <WalkIcon sx={{ mr: 1.5 }} /> ניווט ברגל
         </MenuItem>
-        <MenuItem onClick={() => handleNavigate('waze')}>
-          <CarIcon sx={{ mr: 1 }} /> ניווט בוויז
+        <MenuItem onClick={() => handleNavigate('waze')} sx={{ py: 1.5 }}>
+          <CarIcon sx={{ mr: 1.5 }} /> ניווט בוויז
         </MenuItem>
-        <MenuItem onClick={() => handleNavigate()}>
-          <NavigationIcon sx={{ mr: 1 }} /> כל אפשרויות הניווט
+        <MenuItem onClick={() => handleNavigate()} sx={{ py: 1.5 }}>
+          <NavigationIcon sx={{ mr: 1.5 }} /> כל אפשרויות הניווט
         </MenuItem>
       </Menu>
 
       {/* Location Dialog */}
-      <Dialog open={locationDialog} onClose={handleLocationDialogClose} maxWidth="sm" fullWidth>
-        <DialogTitle>הגדרת מיקום בית הכנסת</DialogTitle>
+      <Dialog 
+        open={locationDialog} 
+        onClose={handleLocationDialogClose} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          elevation: 24,
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ 
+          pb: 1,
+          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          color: 'white'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <MyLocationIcon />
+            <Typography variant="h6">הגדרת מיקום בית הכנסת</Typography>
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
@@ -394,6 +481,11 @@ const SynagogueMap = ({
               onChange={(e) => setTempAddress(prev => ({ ...prev, displayName: e.target.value }))}
               fullWidth
               placeholder="לדוגמה: בית הכנסת המרכזי"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
             />
             
             <Divider sx={{ my: 2 }} />
@@ -401,7 +493,17 @@ const SynagogueMap = ({
             <Typography variant="subtitle2" gutterBottom>
               קואורדינטות מיקום
             </Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <Alert 
+              severity="info" 
+              sx={{ 
+                mb: 2,
+                borderRadius: 2,
+                '& .MuiAlert-icon': {
+                  alignItems: 'flex-start',
+                  mt: 1
+                }
+              }}
+            >
               <Typography variant="body2" gutterBottom>
                 הוראות:
               </Typography>
@@ -421,6 +523,11 @@ const SynagogueMap = ({
               placeholder="לדוגמה: 31.7767,35.2345"
               error={!!locationError}
               helperText={locationError}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
             />
 
             {tempLocation.lat && tempLocation.lng && (
@@ -438,6 +545,11 @@ const SynagogueMap = ({
                       onChange={(e) => setTempLocation(prev => ({ ...prev, lat: parseFloat(e.target.value) }))}
                       inputProps={{ step: 'any' }}
                       fullWidth
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={6}>
@@ -448,6 +560,11 @@ const SynagogueMap = ({
                       onChange={(e) => setTempLocation(prev => ({ ...prev, lng: parseFloat(e.target.value) }))}
                       inputProps={{ step: 'any' }}
                       fullWidth
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2
+                        }
+                      }}
                     />
                   </Grid>
                 </Grid>
@@ -455,12 +572,24 @@ const SynagogueMap = ({
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleLocationDialogClose}>ביטול</Button>
+        <DialogActions sx={{ p: 2.5, bgcolor: theme.palette.grey[50] }}>
+          <Button 
+            onClick={handleLocationDialogClose}
+            sx={{ 
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            ביטול
+          </Button>
           <Button 
             onClick={handleLocationSave} 
             variant="contained"
             disabled={!!locationError}
+            sx={{ 
+              borderRadius: 2,
+              px: 3
+            }}
           >
             שמור
           </Button>
@@ -468,51 +597,100 @@ const SynagogueMap = ({
       </Dialog>
 
       {/* Hours Dialog */}
-      <Dialog open={hoursDialog} onClose={handleHoursDialogClose} maxWidth="md" fullWidth>
-        <DialogTitle>עריכת שעות פתיחה</DialogTitle>
+      <Dialog 
+        open={hoursDialog} 
+        onClose={handleHoursDialogClose} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          elevation: 24,
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ 
+          pb: 1,
+          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          color: 'white'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ScheduleIcon />
+            <Typography variant="h6">הגדרת שעות פתיחה</Typography>
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
-            <Grid container spacing={3}>
-              {DAYS.map((day) => (
-                <Grid item xs={12} key={day.id}>
-                  <Box 
-                    sx={{ 
-                      p: 2, 
-                      borderRadius: 1,
-                      bgcolor: `${day.color}15`,
-                      border: `1px solid ${day.color}40`
-                    }}
-                  >
-                    <Typography variant="subtitle1" sx={{ color: day.color, fontWeight: 600, mb: 2 }}>
-                      יום {day.name}
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                      <TextField
-                        label="שעות בוקר"
-                        value={tempHours[day.id]?.morning || ''}
-                        onChange={(e) => handleHoursChange(day.id, 'morning', e.target.value)}
-                        placeholder="לדוגמה: 06:00-12:00"
-                        fullWidth
-                        size="small"
-                      />
-                      <TextField
-                        label="שעות ערב"
-                        value={tempHours[day.id]?.evening || ''}
-                        onChange={(e) => handleHoursChange(day.id, 'evening', e.target.value)}
-                        placeholder="לדוגמה: 16:00-22:00"
-                        fullWidth
-                        size="small"
-                      />
-                    </Stack>
-                  </Box>
+            {DAYS.map((day) => (
+              <Box
+                key={day.id}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: `${day.color}10`,
+                  border: `1px solid ${day.color}30`
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ color: day.color, fontWeight: 600, mb: 2 }}>
+                  יום {day.name}
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="שעות בוקר"
+                      value={tempHours[day.id]?.morning || ''}
+                      onChange={(e) => handleHoursChange(day.id, 'morning', e.target.value)}
+                      fullWidth
+                      placeholder="לדוגמה: 06:00-12:00"
+                      size="small"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          bgcolor: 'white'
+                        }
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="שעות ערב"
+                      value={tempHours[day.id]?.evening || ''}
+                      onChange={(e) => handleHoursChange(day.id, 'evening', e.target.value)}
+                      fullWidth
+                      placeholder="לדוגמה: 16:00-22:00"
+                      size="small"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          bgcolor: 'white'
+                        }
+                      }}
+                    />
+                  </Grid>
                 </Grid>
-              ))}
-            </Grid>
+              </Box>
+            ))}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleHoursDialogClose}>ביטול</Button>
-          <Button onClick={handleHoursSave} variant="contained">שמור</Button>
+        <DialogActions sx={{ p: 2.5, bgcolor: theme.palette.grey[50] }}>
+          <Button 
+            onClick={handleHoursDialogClose}
+            sx={{ 
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            ביטול
+          </Button>
+          <Button 
+            onClick={handleHoursSave} 
+            variant="contained"
+            sx={{ 
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            שמור
+          </Button>
         </DialogActions>
       </Dialog>
     </>

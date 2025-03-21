@@ -1,85 +1,56 @@
 import React from 'react';
 import {
-  Box,
   Paper,
+  Box,
   Typography,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
-  Chip,
+  IconButton,
   useTheme
 } from '@mui/material';
 import {
-  Notifications as NotificationsIcon,
   Event as EventIcon,
-  AccessTime as TimeIcon,
-  School as SchoolIcon,
-  People as PeopleIcon,
-  Synagogue as SynagogueIcon,
-  Star as StarIcon
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  NotificationsActive as AlertIcon
 } from '@mui/icons-material';
 
-const RemindersList = ({ reminders = [] }) => {
+const RemindersList = ({ reminders = [], isAdmin = false, onEdit, onDelete }) => {
   const theme = useTheme();
-
-  const formatTime = (date) => {
-    if (!date) return '';
-    const timeObj = new Date(date);
-    return timeObj.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // פונקציה להחזרת אייקון מתאים לפי סוג התזכורת
-  const getReminderIcon = (type) => {
-    switch (type?.toLowerCase()) {
-      case 'שיעור':
-        return <SchoolIcon color="primary" />;
-      case 'תפילה':
-        return <SynagogueIcon color="primary" />;
-      case 'אירוע':
-        return <PeopleIcon color="primary" />;
-      case 'חשוב':
-        return <StarIcon color="error" />;
-      default:
-        return <NotificationsIcon color="primary" />;
-    }
-  };
-
-  // פונקציה להחזרת צבע צ'יפ לפי סוג התזכורת
-  const getChipColor = (type) => {
-    switch (type?.toLowerCase()) {
-      case 'שיעור':
-        return 'primary';
-      case 'תפילה':
-        return 'secondary';
-      case 'אירוע':
-        return 'success';
-      case 'חשוב':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   return (
     <Paper
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 2,
-        bgcolor: '#ffffff',
+        borderRadius: 3,
+        bgcolor: 'background.paper',
         border: '1px solid',
         borderColor: 'divider',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
         width: '100%',
-        height: 200,
+        height: 400,
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
+          transform: 'translateY(-4px)'
+        }
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <EventIcon color="primary" />
-        <Typography variant="h6" component="div" fontWeight={700}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1, 
+        mb: 2,
+        pb: 2,
+        borderBottom: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <EventIcon sx={{ color: theme.palette.primary.main }} />
+        <Typography variant="h6" component="div" fontWeight={600}>
           הערות חשובות
         </Typography>
       </Box>
@@ -88,100 +59,111 @@ const RemindersList = ({ reminders = [] }) => {
         sx={{
           flexGrow: 1,
           overflowY: 'auto',
+          mr: -1,
+          pr: 1,
           '&::-webkit-scrollbar': {
-            width: '8px',
+            width: '6px',
           },
           '&::-webkit-scrollbar-track': {
             backgroundColor: 'transparent',
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: theme.palette.grey[300],
-            borderRadius: '4px',
+            backgroundColor: theme.palette.primary.main,
+            opacity: 0.1,
+            borderRadius: '3px',
           },
         }}
       >
-        {reminders.length > 0 ? (
-          <List sx={{ py: 0 }}>
-            {reminders.map((reminder) => (
+        <List sx={{ py: 0 }}>
+          {reminders.length > 0 ? (
+            reminders.map((reminder, index) => (
               <ListItem
-                key={reminder._id}
+                key={reminder.id || index}
                 sx={{
-                  mb: 1,
-                  bgcolor: theme.palette.grey[50],
+                  px: 2,
+                  py: 1.5,
                   borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  transition: 'all 0.2s ease',
+                  mb: 1,
+                  bgcolor: 'background.default',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
-                    bgcolor: theme.palette.grey[100],
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  },
+                    bgcolor: `${theme.palette.primary.main}10`,
+                    transform: 'translateX(-4px)'
+                  }
                 }}
+                secondaryAction={
+                  isAdmin && (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => onEdit?.(reminder)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          '&:hover': { transform: 'scale(1.1)' }
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => onDelete?.(reminder.id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          '&:hover': { transform: 'scale(1.1)' }
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  )
+                }
               >
-                <ListItemIcon>
-                  {getReminderIcon(reminder.type)}
-                </ListItemIcon>
                 <ListItemText
                   primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Typography variant="subtitle1" component="div" fontWeight={600}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AlertIcon 
+                        sx={{ 
+                          fontSize: 20, 
+                          color: reminder.important ? theme.palette.error.main : theme.palette.warning.main 
+                        }} 
+                      />
+                      <Typography variant="subtitle1" fontWeight={500}>
                         {reminder.title}
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Chip
-                          label={formatTime(reminder.date)}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                          icon={<TimeIcon />}
-                          sx={{ minWidth: 90 }}
-                        />
-                        <Chip
-                          label={reminder.type || 'כללי'}
-                          size="small"
-                          color={getChipColor(reminder.type)}
-                          variant="outlined"
-                          sx={{ minWidth: 70 }}
-                        />
-                      </Box>
                     </Box>
                   }
                   secondary={
                     <Typography 
                       variant="body2" 
-                      component="div" 
-                      color="text.secondary" 
                       sx={{ 
                         mt: 0.5,
+                        color: theme.palette.text.secondary,
                         lineHeight: 1.4
                       }}
                     >
-                      {reminder.description}
+                      {reminder.content}
                     </Typography>
                   }
                 />
               </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Box 
-            sx={{ 
-              height: '100%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              flexDirection: 'column',
-              gap: 1,
-              color: 'text.secondary'
-            }}
-          >
-            <NotificationsIcon sx={{ fontSize: 40, opacity: 0.5 }} />
-            <Typography variant="body1" color="inherit">
-              אין הערות חשובות להיום
-            </Typography>
-          </Box>
-        )}
+            ))
+          ) : (
+            <Box
+              sx={{
+                py: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                color: 'text.secondary',
+              }}
+            >
+              <EventIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+              <Typography>אין הערות חשובות</Typography>
+            </Box>
+          )}
+        </List>
       </Box>
     </Paper>
   );
