@@ -5,7 +5,6 @@ const auth = async (req, res, next) => {
   console.log('Request path:', req.path);
   
   try {
-    // בדיקת הטוקן מה-headers
     const token = req.header('Authorization')?.replace('Bearer ', '');
     console.log('Token exists:', !!token);
     
@@ -14,28 +13,31 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'אנא התחבר למערכת' });
     }
 
-    console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
-    console.log('TOKEN_SECRET exists:', !!process.env.TOKEN_SECRET);
+    // Load secrets from environment variables with fallbacks
+    const JWT_SECRET = process.env.JWT_SECRET || 'yourfallbacksecret';
+    const TOKEN_SECRET = process.env.TOKEN_SECRET || 'yourfallbacksecret';
+    
+    console.log('JWT_SECRET exists:', !!JWT_SECRET);
+    console.log('TOKEN_SECRET exists:', !!TOKEN_SECRET);
     
     let decoded;
     
-    // נסיון לאמת את הטוקן עם המפתח הראשון
+    // Try JWT_SECRET first
     try {
       console.log('Trying to verify with JWT_SECRET...');
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('JWT_SECRET verification successful');
-    } catch (firstError) {
-      console.log('JWT_SECRET verification failed:', firstError.message);
+      decoded = jwt.verify(token, JWT_SECRET);
+      console.log('Token verified with JWT_SECRET');
+    } catch (jwtError) {
+      console.log('JWT_SECRET verification failed:', jwtError.message);
       
-      // אם נכשל, ננסה עם המפתח השני
+      // If JWT_SECRET fails, try TOKEN_SECRET
       try {
         console.log('Trying to verify with TOKEN_SECRET...');
-        decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-        console.log('TOKEN_SECRET verification successful');
-      } catch (secondError) {
-        console.log('TOKEN_SECRET verification failed:', secondError.message);
-        // אם שניהם נכשלו, נחזיר שגיאת אימות
-        return res.status(401).json({ message: 'אנא התחבר מחדש למערכת' });
+        decoded = jwt.verify(token, TOKEN_SECRET);
+        console.log('Token verified with TOKEN_SECRET');
+      } catch (tokenError) {
+        console.log('TOKEN_SECRET verification failed:', tokenError.message);
+        throw new Error('Token verification failed with both secrets');
       }
     }
     
@@ -44,7 +46,7 @@ const auth = async (req, res, next) => {
     // הוספת המידע על המשתמש לבקשה
     req.user = { 
       id: decoded.userId || decoded.id,
-      rols: decoded.role || decoded.rol || decoded.rols  // תמיכה בכל סוגי השדות לצורך תאימות לאחור
+      rols: decoded.role || decoded.rol || decoded.rols || 'user'  // תמיכה בכל סוגי השדות לצורך תאימות לאחור
     };
     
     console.log('User info added to request:', req.user);
@@ -53,9 +55,31 @@ const auth = async (req, res, next) => {
     
     next();
   } catch (error) {
-    console.log('Unexpected error in auth middleware:', error.message);
+    console.log('Auth middleware error:', error.message);
     res.status(401).json({ message: 'אנא התחבר מחדש למערכת' });
   }
 };
 
-module.exports = auth;
+// Check if user is admin
+const isAdmin = (req, res, next) => {
+  console.log('isAdmin middleware running...');
+  console.log('User object:', req.user);
+  
+  if (!req.user) {
+    console.log('No user object found in request');
+    return res.status(401).json({ message: 'אנא התחבר למערכת' });
+  }
+
+  const userRole = req.user.rols;
+  console.log('User role for admin check:', userRole);
+  
+  if (!['admin', 'manager'].includes(userRole)) {
+    console.log('User role not authorized:', userRole);
+    return res.status(403).json({ message: 'אין לך הרשאות מתאימות' });
+  }
+
+  console.log('User authorized as admin/manager');
+  next();
+};
+
+module.exports = { auth, isAdmin };

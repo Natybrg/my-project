@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { verifyUser, verifyAdmin, verifyGabay, verifyManager } = require("../middleware/loginMiddelwares");
-const auth = require("../middleware/auth");
+const { auth, isAdmin } = require("../middleware/auth");
 
 const validateRegistration = (req, res, next) => {
   const { firstName, fatherName, lastName, phone, password } = req.body;
@@ -366,10 +366,8 @@ router.put('/user/:userId', auth, async (req, res) => {
   }
 });
 
-// Add this route to your auth.js file where other user-related routes are defined
-
 // Delete user - only for admins
-router.delete('/users/:userId', auth, verifyAdmin, async (req, res) => {
+router.delete('/users/:userId', auth, isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -408,4 +406,6 @@ router.get('/check-auth', auth, async (req, res) => {
   }
 });
 
+// Make sure there are no routes defined after this line!
+// Export the router
 module.exports = router;

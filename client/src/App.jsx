@@ -10,6 +10,7 @@ import DataforShabat from './pages/DataforShabat';
 import UserManagementPage from './RolsPages/gabai/Management';
 import AdminPage from './pages/AdminPage';
 import UserDebtsPage from './pages/UserDebtsPage';
+import SynagogueLocationPage from './pages/SynagogueLocationPage';
 import DayTimesPage from './pages/DayTimesPage';
 import theme from './theme';
 import cacheRtl from './cacheRtl';
@@ -86,6 +87,7 @@ const ProtectedRouteAdmin = () => {
       <Route path="/" element={<AdminPage />} />
       <Route path="/management" element={<UserManagementPage />} />
       <Route path="/debts" element={<UserDebtsPage />} />
+      <Route path="/location" element={<SynagogueLocationPage />} />
     </Routes>
   );
 };

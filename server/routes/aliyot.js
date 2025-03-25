@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Debt = require('../models/Debt');
-const auth = require('../middleware/auth');
+const { auth, isAdmin } = require('../middleware/auth');
 const { verifyGabay, verifyUser } = require('../middleware/loginMiddelwares');
 const jwt = require('jsonwebtoken');
 
@@ -53,52 +53,28 @@ router.get('/:userId/aliyot', auth, async (req, res) => {
   try {
       const { userId } = req.params;
       
-      // בדיקת הרשאות - מוודא שהמשתמש מחובר
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Using req.user from auth middleware instead of duplicating token verification
+      if (!req.user) {
         return res.status(401).json({ message: 'אין הרשאה לפעולה זו' });
       }
       
-      const token = authHeader.split(' ')[1];
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (jwtErr) {
-        return res.status(401).json({ message: 'טוקן לא חוקי' });
-      }
-      
       // בודק אם המשתמש מנסה לצפות בנתונים של עצמו או שיש לו הרשאות מיוחדות
-      const isOwnData = decoded.userId === userId;
-      const userRole = decoded.role || decoded.rol; // Support both role and rol for backward compatibility
+      const isOwnUser = req.user.id === userId;
+      const isAdmin = ['admin', 'gabai', 'manager'].includes(req.user.rols);
       
-      // Allow all authenticated users to view their own data
-      // Allow admin, gabai, and manager to view other users' data
-      const hasSpecialPermission = ['admin', 'gabai', 'manager'].includes(userRole);
-      
-      if (!isOwnData && !hasSpecialPermission) {
-        return res.status(403).json({ message: 'אין הרשאה לצפות בנתונים של משתמש אחר' });
+      if (!isOwnUser && !isAdmin) {
+        return res.status(403).json({ message: 'אין לך הרשאה לצפות בנתונים של משתמש אחר' });
       }
-      
-      const user = await User.findById(userId).populate({
-          path: 'debts',
-          // Explicitly include the paidAmount and paymentHistory fields in the response
-          select: 'userId amount paidAmount date parsha aliyaType isPaid paymentHistory paidDate'
-      });
+
+      const user = await User.findById(userId).populate('debts');
       if (!user) {
-          return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: 'משתמש לא נמצא' });
       }
-      // Make sure the virtuals are included in the response
-      const debts = user.debts.map(debt => {
-          const debtObj = debt.toObject({ virtuals: true });
-          // Ensure paidAmount is included and has a valid value
-          debtObj.paidAmount = debt.paidAmount || 0;
-          return debtObj;
-      });
-      
-      res.status(200).json(debts);
+
+      res.json(user.debts || []);
   } catch (error) {
-      console.error('Error fetching aliyot:', error);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
+      console.error('Error getting user aliyot:', error);
+      res.status(500).json({ message: 'שגיאת שרת', error: error.message });
   }
 });
 

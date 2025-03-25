@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Box, Paper, Typography, Grid, CircularProgress } from '@mui/material';
-import { WbSunny as SunIcon, Opacity as OpacityIcon } from '@mui/icons-material';
+import { 
+  Container, 
+  Box, 
+  Paper, 
+  Typography, 
+  Grid, 
+  CircularProgress, 
+  Alert, 
+  Button, 
+  Collapse, 
+  Divider,
+  List,
+  ListItem,
+  ListItemText
+} from '@mui/material';
+import { 
+  LocationOn as LocationIcon,
+  AccessTime as TimeIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon 
+} from '@mui/icons-material';
 import SynagogueMap from '../components/map/SynagogueMap';
+import { getSynagogueLocation } from '../services/synagogueService';
 
 const HomePage = () => {
-  const [zmanim, setZmanim] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState(false);
+  const [showOpeningHours, setShowOpeningHours] = useState(false);
   const [synagogueDetails, setSynagogueDetails] = useState({
     name: "בית הכנסת המרכזי",
     location: {
@@ -13,8 +34,28 @@ const HomePage = () => {
       lng: "35.2345"
     },
     address: "רחוב הדוגמה 123, ירושלים",
-    openingHours: "06:00-22:00"
+    openingHours: {
+      sunday: { open: '', close: '' },
+      monday: { open: '', close: '' },
+      tuesday: { open: '', close: '' },
+      wednesday: { open: '', close: '' },
+      thursday: { open: '', close: '' },
+      friday: { open: '', close: '' },
+      saturday: { open: '', close: '' }
+    },
+    hideOpeningHours: false
   });
+
+  // Days of the week translations
+  const dayTranslations = {
+    sunday: 'ראשון',
+    monday: 'שני',
+    tuesday: 'שלישי',
+    wednesday: 'רביעי',
+    thursday: 'חמישי',
+    friday: 'שישי',
+    saturday: 'שבת'
+  };
 
   const handleAddressChange = (newAddress) => {
     setSynagogueDetails(prev => ({
@@ -25,125 +66,187 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    const fetchZmanim = async () => {
+    // פונקציה לטעינת פרטי בית הכנסת מהשרת
+    const fetchSynagogueDetails = async () => {
       try {
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-        const response = await fetch(
-          `https://www.hebcal.com/zmanim?cfg=json&latitude=${synagogueDetails.location.lat}&longitude=${synagogueDetails.location.lng}&date=${dateStr}`
-        );
-        const data = await response.json();
-        setZmanim(data);
-        setLoading(false);
+        setLocationLoading(true);
+        setLocationError(false);
+        const data = await getSynagogueLocation();
+        console.log("Synagogue data:", data); // Add debug logging
+        
+        // Convert opening hours to array if needed
+        let formattedOpeningHours = data.openingHours;
+        
+        // If openingHours is a string, try to create a structured object
+        if (typeof data.openingHours === 'string') {
+          console.log("Converting openingHours from string format");
+          formattedOpeningHours = {
+            sunday: { open: '', close: '' },
+            monday: { open: '', close: '' },
+            tuesday: { open: '', close: '' },
+            wednesday: { open: '', close: '' },
+            thursday: { open: '', close: '' },
+            friday: { open: '', close: '' },
+            saturday: { open: '', close: '' }
+          };
+        }
+        
+        setSynagogueDetails(prev => ({
+          ...prev,
+          name: data.name || "בית הכנסת המרכזי",
+          location: {
+            lat: data.location?.lat || data.latitude || prev.location.lat,
+            lng: data.location?.lng || data.longitude || prev.location.lng
+          },
+          address: data.address || prev.address,
+          openingHours: formattedOpeningHours || prev.openingHours,
+          hideOpeningHours: data.hideOpeningHours || false
+        }));
       } catch (error) {
-        console.error('Error fetching zmanim:', error);
-        setLoading(false);
+        console.error('Error fetching synagogue details:', error);
+        setLocationError(true);
+      } finally {
+        setLocationLoading(false);
       }
     };
 
-    fetchZmanim();
-  }, [synagogueDetails.location]);
+    fetchSynagogueDetails();
+  }, []);
 
-  const formatTime = (isoTime) => {
-    if (!isoTime) return '';
-    const time = new Date(isoTime);
-    return time.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  // Format opening hours for display
+  const formatOpeningHoursForDisplay = () => {
+    if (typeof synagogueDetails.openingHours === 'string') {
+      return synagogueDetails.openingHours;
+    }
+    
+    // Get today's day of week
+    const today = new Date();
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayName = daysOfWeek[today.getDay()]; // 0 is Sunday in JS
+    
+    // Format just today's hours
+    const todayHours = synagogueDetails.openingHours[todayName];
+    if (todayHours && (todayHours.open || todayHours.close)) {
+      const timeStr = todayHours.open && todayHours.close 
+        ? `${todayHours.open} - ${todayHours.close}`
+        : todayHours.open 
+          ? `מ-${todayHours.open}` 
+          : todayHours.close 
+            ? `עד ${todayHours.close}`
+            : '';
+      return `יום ${dayTranslations[todayName]}: ${timeStr}`;
+    }
+    
+    return "לא הוגדרו שעות פתיחה להיום";
+  };
+
+  // Check if any opening hours are defined
+  const hasOpeningHours = Object.values(synagogueDetails.openingHours || {}).some(
+    day => day.open || day.close
+  );
+
+  // Toggle opening hours display
+  const toggleOpeningHours = () => {
+    setShowOpeningHours(!showOpeningHours);
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <SynagogueMap
-            location={synagogueDetails.location}
-            address={synagogueDetails.address}
-            openingHours={synagogueDetails.openingHours}
-            synagogueName={synagogueDetails.name}
-            onAddressChange={handleAddressChange}
-          />
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              bgcolor: '#ffffff',
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
-              זמני היום
-            </Typography>
-
-            {loading ? (
+    <Container maxWidth="xl" sx={{ py: 3, px: { xs: 0, sm: 2 } }}>
+      <Grid container spacing={0} justifyContent="center">
+        <Grid item xs={12}>
+          <Box sx={{ mb: 3 }}>
+            {locationLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
               </Box>
-            ) : zmanim ? (
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'primary.soft',
-                    borderRadius: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SunIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        זמני תפילה
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2">
-                      הנץ החמה: {formatTime(zmanim.times.sunrise)}
-                    </Typography>
-                    <Typography variant="body2">
-                      שקיעה: {formatTime(zmanim.times.sunset)}
-                    </Typography>
-                    <Typography variant="body2">
-                      צאת הכוכבים: {formatTime(zmanim.times.tzeit)}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'primary.soft',
-                    borderRadius: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <OpacityIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        זמני מנחה
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2">
-                      מנחה גדולה: {formatTime(zmanim.times.minchaGedola)}
-                    </Typography>
-                    <Typography variant="body2">
-                      מנחה קטנה: {formatTime(zmanim.times.minchaKetana)}
-                    </Typography>
-                    <Typography variant="body2">
-                      פלג המנחה: {formatTime(zmanim.times.plagHaMincha)}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+            ) : locationError ? (
+              <Alert severity="error" sx={{ mx: 2, mb: 2 }}>
+                מיקום בית הכנסת לא נקבע
+              </Alert>
             ) : (
-              <Typography color="error">
-                שגיאה בטעינת הזמנים
-              </Typography>
+              <>
+                <Box sx={{ 
+                  width: '100%', 
+                  overflow: 'hidden',
+                  borderRadius: { xs: 0, sm: 2 },
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}>
+                  <SynagogueMap
+                    location={synagogueDetails.location}
+                    address={synagogueDetails.address}
+                    openingHours={formatOpeningHoursForDisplay()}
+                    synagogueName={synagogueDetails.name}
+                    onAddressChange={handleAddressChange}
+                    hideOpeningHours={synagogueDetails.hideOpeningHours}
+                    mapHeight={{ xs: '250px', sm: '280px', md: '320px' }}
+                    fullWidth={true}
+                  />
+                </Box>
+
+                {/* Opening Hours Section */}
+                {!synagogueDetails.hideOpeningHours && hasOpeningHours && (
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      mt: 3, 
+                      mx: { xs: 2, sm: 2 },
+                      p: 2, 
+                      border: '1px solid', 
+                      borderColor: 'divider',
+                      borderRadius: 2
+                    }}
+                  >
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                      }}
+                      onClick={toggleOpeningHours}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <TimeIcon color="primary" sx={{ mr: 1 }} />
+                        <Typography variant="h6">שעות פתיחה</Typography>
+                      </Box>
+                      {showOpeningHours ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </Box>
+                    
+                    <Collapse in={showOpeningHours}>
+                      <Divider sx={{ my: 2 }} />
+                      <List dense sx={{ bgcolor: 'background.paper' }}>
+                        {Object.entries(synagogueDetails.openingHours || {}).map(([day, hours]) => (
+                          (hours.open || hours.close) && (
+                            <ListItem key={day} sx={{ py: 0.5 }}>
+                              <ListItemText 
+                                primary={
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body1" fontWeight={600}>
+                                      יום {dayTranslations[day]}
+                                    </Typography>
+                                    <Typography variant="body1">
+                                      {hours.open && hours.close 
+                                        ? `${hours.open} - ${hours.close}`
+                                        : hours.open 
+                                          ? `מ-${hours.open}` 
+                                          : hours.close 
+                                            ? `עד ${hours.close}`
+                                            : 'לא הוגדר'}
+                                    </Typography>
+                                  </Box>
+                                }
+                              />
+                            </ListItem>
+                          )
+                        ))}
+                      </List>
+                    </Collapse>
+                  </Paper>
+                )}
+              </>
             )}
-          </Paper>
+          </Box>
         </Grid>
       </Grid>
     </Container>

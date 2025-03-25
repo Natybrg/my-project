@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Reminder = require('../models/Reminder');
 const { verifyManager } = require('../middleware/loginMiddelwares');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // הוספת תזכורת חדשה - רק למנהלים ומעלה
 router.post('/', auth, verifyManager, async (req, res) => {

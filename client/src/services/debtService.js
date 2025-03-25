@@ -1,19 +1,25 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:3002';
+const API_URL = 'http://localhost:3002';
+
+// Helper function to get auth headers
+const getAuthHeader = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.log('No token found when calling debt service');
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+};
 
 // Get all debts for a user
 export const getUserDebts = async (userId) => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/aliyot/${userId}/aliyot`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const headers = getAuthHeader();
+    const response = await axios.get(`${API_URL}/api/aliyot/${userId}/aliyot`, { headers });
     return response.data;
   } catch (error) {
-    console.error('Error fetching user debts:', error);
+    console.error('Error fetching user debts:', error.response?.data || error.message);
     throw error;
   }
 };
@@ -22,7 +28,7 @@ export const getUserDebts = async (userId) => {
 export const addAliyah = async (debtData) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/aliyot/addAliyah`, debtData, {
+    const response = await axios.post(`${API_URL}/api/aliyot/addAliyah`, debtData, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -43,7 +49,7 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
     // Try the aliyot endpoint first
     try {
       console.log(`Attempting to update payment status for ID ${paymentId} using aliyot endpoint`);
-      const response = await axios.put(`${API_URL}/aliyot/payment/${paymentId}`, 
+      const response = await axios.put(`${API_URL}/api/aliyot/payment/${paymentId}`, 
         { isPaid },
         {
           headers: {
@@ -87,7 +93,7 @@ export const makePartialPayment = async (paymentId, amount, note) => {
     // Try the aliyot endpoint first
     try {
       console.log(`Attempting to make partial payment for ID ${paymentId} using aliyot endpoint`);
-      const response = await axios.post(`${API_URL}/aliyot/payment/${paymentId}/partial`, 
+      const response = await axios.post(`${API_URL}/api/aliyot/payment/${paymentId}/partial`, 
         { amount, note },
         {
           headers: {
@@ -127,7 +133,7 @@ export const makePartialPayment = async (paymentId, amount, note) => {
 export const updateDebtDetails = async (debtId, debtData) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/aliyot/debt/${debtId}`, 
+    const response = await axios.put(`${API_URL}/api/aliyot/debt/${debtId}`, 
       debtData,
       {
         headers: {
@@ -147,7 +153,7 @@ export const updateDebtDetails = async (debtId, debtData) => {
 export const getUserDetailsWithDebts = async (userId) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/aliyot/user/${userId}/details`, {
+    const response = await axios.get(`${API_URL}/api/aliyot/user/${userId}/details`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -167,7 +173,7 @@ export const deleteDebt = async (debtId) => {
     // Try the aliyot endpoint first
     try {
       console.log(`Attempting to delete debt with ID ${debtId} using aliyot endpoint`);
-      const response = await axios.delete(`${API_URL}/aliyot/debt/${debtId}`, {
+      const response = await axios.delete(`${API_URL}/api/aliyot/debt/${debtId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:3002',
+  baseURL: 'http://localhost:3002',
 });
 
 // Add a request interceptor to add the token to each request
@@ -14,6 +14,8 @@ api.interceptors.request.use((config) => {
       Authorization: `Bearer ${token}`,
     };
   }
+  
+  console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
   return config;
 });
 
@@ -32,7 +34,7 @@ api.interceptors.response.use(
 
 export const login = async (phone, password) => {
   try {
-    const response = await api.post('/auth/login', { phone, password });
+    const response = await api.post('/api/auth/login', { phone, password });
     return response.data;
   } catch (error) {
     console.error('Login error:', error);
@@ -60,7 +62,7 @@ export const login = async (phone, password) => {
 // פונקציה חדשה לקבלת פרטי המשתמש
 export const getUserDetails = async (userId) => {
   try {
-    const response = await api.get(`/auth/user/${userId}`);
+    const response = await api.get(`/api/auth/user/${userId}`);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בקבלת פרטי המשתמש' };
@@ -69,7 +71,7 @@ export const getUserDetails = async (userId) => {
 
 export const register = async (userData) => {
   try {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/api/auth/register', userData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -83,7 +85,7 @@ export const register = async (userData) => {
 // Update payment status (full payment)
 export const updatePaymentStatus = async (paymentId, isPaid) => {
   try {
-    const response = await api.put(`/aliyot/payment/${paymentId}`, { isPaid });
+    const response = await api.put(`/api/aliyot/payment/${paymentId}`, { isPaid });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בעדכון סטטוס התשלום' };
@@ -93,7 +95,7 @@ export const updatePaymentStatus = async (paymentId, isPaid) => {
 // Make partial payment
 export const makePartialPayment = async (paymentId, amount, note = '') => {
   try {
-    const response = await api.post(`/aliyot/payment/${paymentId}/partial`, { amount, note });
+    const response = await api.post(`/api/aliyot/payment/${paymentId}/partial`, { amount, note });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה ברישום תשלום חלקי' };
@@ -102,7 +104,7 @@ export const makePartialPayment = async (paymentId, amount, note = '') => {
 
 export const getUserAliyot = async (userId) => {
   try {
-    const response = await api.get(`/aliyot/${userId}/aliyot`);
+    const response = await api.get(`/api/aliyot/${userId}/aliyot`);
     return response?.data || []; 
   } catch (error) {
     console.error('Error fetching user aliyot:', error);
@@ -113,7 +115,7 @@ export const getUserAliyot = async (userId) => {
 // Get user details with debts (admin/gabai view)
 export const getUserWithDebts = async (userId) => {
   try {
-    const response = await api.get(`/aliyot/user/${userId}/details`);
+    const response = await api.get(`/api/aliyot/user/${userId}/details`);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בקבלת פרטי משתמש וחובות' };
@@ -123,7 +125,7 @@ export const getUserWithDebts = async (userId) => {
 // Update debt details
 export const updateDebtDetails = async (debtId, debtData) => {
   try {
-    const response = await api.put(`/aliyot/debt/${debtId}`, debtData);
+    const response = await api.put(`/api/aliyot/debt/${debtId}`, debtData);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בעדכון פרטי החוב' };
@@ -132,7 +134,7 @@ export const updateDebtDetails = async (debtId, debtData) => {
 
 export const getAllUsers = async () => {
   try {
-    const response = await api.get('/auth/users');
+    const response = await api.get('/api/auth/users');
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בקבלת רשימת משתמשים' };
@@ -141,7 +143,7 @@ export const getAllUsers = async () => {
 
 export const updateUser = async (userId, userData) => {
   try {
-    const response = await api.put(`/auth/users/${userId}`, userData);
+    const response = await api.put(`/api/auth/users/${userId}`, userData);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'אירעה שגיאה בעדכון המשתמש' };
@@ -177,9 +179,7 @@ export const createAliya = async (userId, aliyaData) => {
     };
 
     console.log('Sending aliya data:', payload);
-
-    const token = localStorage.getItem('token');
-    const response = await api.post('/aliyot/addAliyah', payload);
+    const response = await api.post('/api/aliyot/addAliyah', payload);
     return response.data;
   } catch (error) {
     console.error('Failed to create aliya:', error);
@@ -195,13 +195,11 @@ export const createAliya = async (userId, aliyaData) => {
   }
 };
 
-// Add these functions to your existing api.js file
-
 // Get user profile
 export const getUserProfile = async (userId) => {
   try {
     // Use the same endpoint as getUserDetails since that's likely the correct one
-    const response = await api.get(`/auth/user/${userId}`);
+    const response = await api.get(`/api/auth/user/${userId}`);
     return response;
   } catch (error) {
     console.error('Error in getUserProfile:', error);
@@ -217,7 +215,7 @@ export const getUserProfile = async (userId) => {
 export const updateUserProfile = async (userId, profileData) => {
   try {
     // Update to use the same endpoint pattern as getUserProfile
-    const response = await api.put(`/auth/user/${userId}`, profileData);
+    const response = await api.put(`/api/auth/user/${userId}`, profileData);
     return response;
   } catch (error) {
     if (error.response) {
@@ -230,7 +228,7 @@ export const updateUserProfile = async (userId, profileData) => {
 
 export const deleteUser = async (userId) => {
   try {
-    const response = await api.delete(`/auth/users/${userId}`); // Updated path to match server route
+    const response = await api.delete(`/api/auth/users/${userId}`); // Updated path to match server route
     return response.data;
   } catch (error) {
     console.error('Error in deleteUser:', error);
@@ -241,11 +239,42 @@ export const deleteUser = async (userId) => {
 // Check authentication status
 export const checkAuth = async () => {
   try {
-    const response = await api.get('/auth/check-auth');
+    const response = await api.get('/api/auth/check-auth');
     return response.data;
   } catch (error) {
     console.error('Error checking auth:', error);
     return { isAuthenticated: false };
+  }
+};
+
+// Helper function to log token information for debugging
+export const debugToken = () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('No token found in localStorage');
+      return null;
+    }
+    
+    // Parse the token (without verification)
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    const payload = JSON.parse(jsonPayload);
+    console.log('Token payload:', payload);
+    
+    // Check if token is expired
+    const expiryDate = new Date(payload.exp * 1000);
+    console.log('Token expires:', expiryDate);
+    console.log('Is token expired:', expiryDate < new Date());
+    
+    return payload;
+  } catch (error) {
+    console.error('Error parsing token:', error);
+    return null;
   }
 };
 
